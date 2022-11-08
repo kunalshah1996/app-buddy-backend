@@ -12,8 +12,19 @@ dotenv.config()
 
 const app = express();
 
+var whitelist = ['https://app-buddy.netlify.app/', 'http://localhost:3000']
+var corsOptionsDelegate = function (req, callback) {
+    var corsOptions;
+    if (whitelist.indexOf(req.header('Origin')) !== -1) {
+        corsOptions = { origin: true, credentials: true } // reflect (enable) the requested origin in the CORS response
+    } else {
+        corsOptions = { origin: false } // disable CORS for this request
+    }
+    callback(null, corsOptions) // callback expects two parameters: error and options
+}
+
 app.use(express.json());
-app.use(cors({ origin: ["https://app-buddy.netlify.app/", "http://localhost:3000"], credentials: true }));
+app.use(cors(corsOptionsDelegate));
 app.use(
     session({
         secret: "KunalSamruddhi",
