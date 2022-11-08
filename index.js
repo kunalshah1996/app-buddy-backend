@@ -19,9 +19,9 @@ app.use(cors({ origin: "https://app-buddy.netlify.app", credentials: true }));
 app.use(
     session({
         secret: "KunalSamruddhi",
-        resave: true,
+        resave: false,
         saveUninitialized: false,
-        cookie: { sameSite: 'none', secure: true }
+        cookie: { sameSite: "none", secure: true }
     })
 );
 app.use(passport.initialize());
