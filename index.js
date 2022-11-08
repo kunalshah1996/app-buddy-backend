@@ -61,11 +61,7 @@ app.get('/auth/google/callback',
     passport.authenticate('google', {
         failureRedirect: 'https://app-buddy.netlify.app/login'
     }), function (req, res) {
-<<<<<<< HEAD
         res.redirect('https://app-buddy.netlify.app');
-=======
-        res.redirect('https://app-buddy.netlify.app '); {/*https://app-buddy.netlify.app */ }
->>>>>>> d92feb224b9fcbac05b8c8694b39698ef916c47e
     });
 
 
