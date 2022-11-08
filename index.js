@@ -15,7 +15,7 @@ const app = express();
 
 
 app.use(express.json());
-app.use(cors({ origin: "https://app-buddy.netlify.app/", credentials: true }));
+app.use(cors({ origin: "https://app-buddy.netlify.app", credentials: true }));
 app.use(
     session({
         secret: "KunalSamruddhi",
