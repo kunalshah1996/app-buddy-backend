@@ -36,7 +36,7 @@ passport.deserializeUser((user, done) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback", //https://appbuddy.onrender.com/auth/google/callback
+    callbackURL: "https://appbuddy.onrender.com/auth/google/callback", //https://appbuddy.onrender.com/auth/google/callback
     passReqToCallback: true
 },
     function (request, accessToken, refreshToken, profile, done) {
@@ -59,9 +59,9 @@ app.get('/auth/google',
 
 app.get('/auth/google/callback',
     passport.authenticate('google', {
-        failureRedirect: 'http://localhost:3000/login'
+        failureRedirect: 'https://app-buddy.netlify.app/login'
     }), function (req, res) {
-        res.redirect('http://localhost:3000/'); {/*https://app-buddy.netlify.app */ }
+        res.redirect('https://app-buddy.netlify.app '); {/*https://app-buddy.netlify.app */ }
     });
 
 
