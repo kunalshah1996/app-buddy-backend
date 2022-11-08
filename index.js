@@ -21,7 +21,7 @@ app.use(
         secret: "KunalSamruddhi",
         resave: false,
         saveUninitialized: false,
-        cookie: { sameSite: "none", secure: true }
+        cookie: { SameSite: 'none', secure: true }
     })
 );
 app.use(passport.initialize());
