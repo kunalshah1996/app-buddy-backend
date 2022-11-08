@@ -20,7 +20,7 @@ app.use(
     session({
         secret: "KunalSamruddhi",
         resave: true,
-        saveUninitialized: true,
+        saveUninitialized: false,
         cookie: { sameSite: 'none', secure: true }
     })
 );
