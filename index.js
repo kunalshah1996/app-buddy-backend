@@ -4,6 +4,7 @@ import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
+import { google } from 'googleapis'
 
 import { supabase } from './supabaseClient.js';
 import userRoutes from './routes/user.js';
@@ -59,16 +60,20 @@ passport.use(new GoogleStrategy({
     callbackURL: process.env.CALLBACK_URL, //https://appbuddy.onrender.com/auth/google/callback "https://appbuddy.onrender.com/auth/google/callback"
     passReqToCallback: true
 },
-    function (request, accessToken, refreshToken, profile, done) {
+    async function (request, accessToken, refreshToken, params, profile, done) {
 
-        const { data, error } = supabase
+        let token_vals = { access_token: accessToken, token_type: params.token_type, refresh_token: refreshToken, expiry_date: params.expires_in }
+        const { data, error } = await supabase
             .from('Users')
-            .upsert({ user_id: profile.id, access_token: accessToken, refresh_token: refreshToken })
-            .select()
+            .upsert({ user_id: profile.id, access_token: accessToken, refresh_token: refreshToken, tokens: token_vals })
 
         return done(null, profile);
     }
 ));
+
+const oAuth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.CALLBACK_URL,
+);
 
 app.get("/", (req, res) => {
     res.send("Hello World!");
@@ -77,7 +82,7 @@ app.get("/", (req, res) => {
 app.get('/auth/google',
     passport.authenticate('google', {
         scope:
-            ['profile', 'https://mail.google.com/'], accessType: 'offline'
+            ['profile', 'https://mail.google.com/', "https://www.googleapis.com/auth/spreadsheets"], accessType: 'offline'
     }
     ));
 
@@ -93,14 +98,33 @@ app.get('/auth/google/callback',
     passport.authenticate('google', {
         failureRedirect: process.env.FAILURE_REDIRECT  //'https://app-buddy.netlify.app/login'
     }), function (req, res) {
+        sheet()
         res.redirect(process.env.SUCCESS_REDIRECT);//'https://app-buddy.netlify.app'
     });
 
 
+
+
+async function sheet() {
+    let { data, error } = await supabase
+        .from('Users')
+        .select('tokens')` `
+
+    oAuth2Client.setCredentials(data[0].tokens);
+
+
+    const service = google.sheets({ version: 'v4', auth: oAuth2Client });
+
+    const spreadsheet = await service.spreadsheets.create({
+        resource: { properties: { title: 'Test Sheet' } },
+    });
+
+
+    console.log(`Spreadsheet ID: ${spreadsheet.data.spreadsheetId}`);
+}
+
+
 app.use('/user', userRoutes)
-// app.get('/user', (req, res) => {
-//     res.send(req.user);
-// })
 
 
 
