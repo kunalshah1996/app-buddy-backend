@@ -9,7 +9,6 @@ import { google } from 'googleapis'
 import { supabase } from './supabaseClient.js';
 import userRoutes from './routes/user.js';
 
-
 dotenv.config()
 
 const app = express();
@@ -53,6 +52,9 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((user, done) => {
     return done(null, user);
 })
+// GoogleStrategy.prototype.userProfile = function(token, done) {
+//     done(null, {})
+//   }
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
@@ -103,12 +105,12 @@ app.get('/auth/google/callback',
     });
 
 
-
+var getRows;
 
 async function sheet() {
     let { data, error } = await supabase
         .from('Users')
-        .select('tokens')` `
+        .select('tokens')
 
     oAuth2Client.setCredentials(data[0].tokens);
 
@@ -116,13 +118,180 @@ async function sheet() {
     const service = google.sheets({ version: 'v4', auth: oAuth2Client });
 
     const spreadsheet = await service.spreadsheets.create({
-        resource: { properties: { title: 'Test Sheet' } },
-    });
+        resource: { properties: 
+            { title: 'Test Sheet' } ,
 
+    "sheets": 
+    [
+        {
+    //           "conditionalFormats": [
+    //     {
+    //         "ranges": [
+    //             {
+    //                 "sheetId": spreadsheet.data.spreadsheetId,
+    //                 "startRowIndex": 0,
+    //                 "endRowIndex": 3,
+    //                 "startColumnIndex": 0,
+    //                 "endColumnIndex": 0
+    //             }
+    //           ],
+    //         "booleanRule": {
+    //             "format": {
+    //                 // "bold": true,
+    //               }
+    //           },
+    //     }
+    //   ],
+      
+        "data": 
+        [
+          {
+            "startRow": 0, 
+            "startColumn": 0, 
+            "rowData": 
+            [
+              {
+                "values": 
+                [
+                  {
+                    "userEnteredValue": 
+                    {
+                      "stringValue": "Company Name"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "startRow": 0, 
+            "startColumn": 1,
+            "rowData": 
+            [
+              {
+                "values": 
+                [
+                  {
+                    "userEnteredValue": 
+                    {
+                      "stringValue": "Position"
+                    }
+                  }
+                ]
+              }
+            ]
 
-    console.log(`Spreadsheet ID: ${spreadsheet.data.spreadsheetId}`);
+          },
+          {
+            "startRow": 0, 
+            "startColumn": 2,
+            "rowData": 
+            [
+              {
+                "values": 
+                [
+                  {
+                    "userEnteredValue": 
+                    {
+                      "stringValue": "Deadline"
+                    }
+                  }
+                ]
+              }
+            ]
+
+          },
+          {
+            "startRow": 0, 
+            "startColumn": 3,
+            "rowData": 
+            [
+              {
+                "values": 
+                [
+                  {
+                    "userEnteredValue": 
+                    {
+                      "stringValue": "OA Link"
+                    }
+                  }
+                ]
+              }
+            ]
+
+          },
+          {
+            "startRow": 0, 
+            "startColumn": 4,
+            "rowData": 
+            [
+              {
+                "values": 
+                [
+                  {
+                    "userEnteredValue": 
+                    {
+                      "stringValue": "Status"
+                    }
+                  }
+                ]
+              }
+            ]
+
+          }
+        ]
+      }
+    ]
+}});
+
+//Add rows
+let values = [
+    [
+        "amazon", 
+        "Max", 
+        "20-10-2023",
+        "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
+        "interview" 
+    ],
+      [
+        "microsoft", 
+        "SDE2",
+        "20-10-2024", 
+        "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
+        "interview"
+      ],
+      [
+        "Oracle", 
+        "SDE2",
+        "20-10-2024", 
+        "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
+        "interview"
+      ]
+
+ ];
+  let resource = {
+    values,
+  };
+  await service.spreadsheets.values.append({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: 'Sheet1!A1:E1',  
+    valueInputOption: 'RAW',
+    resource: resource
+  }, (err, result) => {
+    if (err) {
+      // Handle error.
+      console.log(err);
+    } 
+  });
+
+//Read rows
+getRows = await service.spreadsheets.values.get({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: 'Sheet1',  
+})
+console.log(getRows.data.values)
+
 }
-
 
 app.use('/user', userRoutes)
 
