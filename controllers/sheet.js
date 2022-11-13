@@ -13,11 +13,11 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 
 export const createSheet = async (req, res) => {
-  console.log(req.user);
   let { data, error } = await supabase
     .from("Users")
     .select("tokens")
     .eq("user_id", req.user.id);
+
 
   oAuth2Client.setCredentials(data[0].tokens);
 
@@ -152,15 +152,20 @@ export const createSheet = async (req, res) => {
       }
     }
   );
+  console.log(spreadsheet.data.spreadsheetId);
 
   res.status(200).send(spreadsheet.data.spreadsheetId);
 
   //Read rows
+  console.log(req.user.id);
 
-  // const { data } = await supabase
-  // .from('Users')
-  // .insert({ sheet_id :spreadsheet.data.spreadsheetId})
-  // .eq('')
+  const { sheet_data, err } = await supabase
+    .from('Users')
+    .update({ sheet_id: spreadsheet.data.spreadsheetId })
+    .eq('user_id', req.user.id)
+
+  console.log(sheet_data);
+  console.log("supa error", err);
 };
 
 export const getCompanyList = async (req, res) => {
@@ -171,5 +176,5 @@ export const getCompanyList = async (req, res) => {
   console.log(getRows.data.values);
 };
 
-export const insertCompany = async (req, res) => {};
-export const insertOAData = async (req, res) => {};
+export const insertCompany = async (req, res) => { };
+export const insertOAData = async (req, res) => { };
