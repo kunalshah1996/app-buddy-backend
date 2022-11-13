@@ -23,94 +23,108 @@ export const createSheet = async (req, res) => {
 
   const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
-  const spreadsheet = await service.spreadsheets.create({
-    resource: {
-      properties: { title: "Test Sheet" },
+  let { data: sheet_id, er } = await supabase
+    .from("Users")
+    .select("sheet_id")
+    .eq("user_id", req.user.id);
+  console.log(sheet_id[0].sheet_id);
 
-      sheets: [
-        {
-          data: [
-            {
-              startRow: 0,
-              startColumn: 0,
-              rowData: [
-                {
-                  values: [
-                    {
-                      userEnteredValue: {
-                        stringValue: "Company Name",
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              startRow: 0,
-              startColumn: 1,
-              rowData: [
-                {
-                  values: [
-                    {
-                      userEnteredValue: {
-                        stringValue: "Position",
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              startRow: 0,
-              startColumn: 2,
-              rowData: [
-                {
-                  values: [
-                    {
-                      userEnteredValue: {
-                        stringValue: "Deadline",
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              startRow: 0,
-              startColumn: 3,
-              rowData: [
-                {
-                  values: [
-                    {
-                      userEnteredValue: {
-                        stringValue: "OA Link",
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              startRow: 0,
-              startColumn: 4,
-              rowData: [
-                {
-                  values: [
-                    {
-                      userEnteredValue: {
-                        stringValue: "Status",
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  });
+  let spreadsheet;
+  if (!sheet_id[0].sheet_id) {
+    spreadsheet = service.spreadsheets.create({
+      resource: {
+        properties: { title: "Test Sheet" },
 
+        sheets: [
+          {
+            data: [
+              {
+                startRow: 0,
+                startColumn: 0,
+                rowData: [
+                  {
+                    values: [
+                      {
+                        userEnteredValue: {
+                          stringValue: "Company Name",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                startRow: 0,
+                startColumn: 1,
+                rowData: [
+                  {
+                    values: [
+                      {
+                        userEnteredValue: {
+                          stringValue: "Position",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                startRow: 0,
+                startColumn: 2,
+                rowData: [
+                  {
+                    values: [
+                      {
+                        userEnteredValue: {
+                          stringValue: "Deadline",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                startRow: 0,
+                startColumn: 3,
+                rowData: [
+                  {
+                    values: [
+                      {
+                        userEnteredValue: {
+                          stringValue: "OA Link",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                startRow: 0,
+                startColumn: 4,
+                rowData: [
+                  {
+                    values: [
+                      {
+                        userEnteredValue: {
+                          stringValue: "Status",
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+  }
+  else {
+    spreadsheet = await service.spreadsheets.get({
+      spreadsheetId: sheet_id[0].sheet_id,
+    });
+  }
+  console.log("Spreadsheet", spreadsheet.data.spreadsheetId);
   //Add rows
   let values = [
     [
@@ -138,7 +152,7 @@ export const createSheet = async (req, res) => {
   let resource = {
     values,
   };
-  await service.spreadsheets.values.append(
+  service.spreadsheets.values.append(
     {
       spreadsheetId: spreadsheet.data.spreadsheetId,
       range: "Sheet1!A1:E1",
@@ -152,28 +166,27 @@ export const createSheet = async (req, res) => {
       }
     }
   );
-  console.log(spreadsheet.data.spreadsheetId);
+  const getRows = await service.spreadsheets.values.get({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: "A:A",
+  });
+  console.log(getRows.data.values);
+
 
   res.status(200).send(spreadsheet.data.spreadsheetId);
 
   //Read rows
-  console.log(req.user.id);
 
-  const { sheet_data, err } = await supabase
-    .from('Users')
-    .update({ sheet_id: spreadsheet.data.spreadsheetId })
-    .eq('user_id', req.user.id)
 
-  console.log(sheet_data);
-  console.log("supa error", err);
+
 };
 
 export const getCompanyList = async (req, res) => {
   getRows = await service.spreadsheets.values.get({
     spreadsheetId: spreadsheet.data.spreadsheetId,
-    range: "Sheet1",
+    range: "A:A",
   });
-  console.log(getRows.data.values);
+  console.log(getRows);
 };
 
 export const insertCompany = async (req, res) => { };
