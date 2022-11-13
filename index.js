@@ -9,10 +9,19 @@ import { google } from "googleapis";
 import { supabase } from "./supabaseClient.js";
 import userRoutes from "./routes/user.js";
 import sheetRoutes from "./routes/sheet.js";
+// import mailRoutes from "./routes/mail.js";
 
 dotenv.config();
 
 const app = express();
+const gmail = google.gmail("v1");
+// const { promisify } = require("util");
+// const fs = require("fs");
+// const readline = require("readline");
+// const rl = readline.createInterface({
+//   input: process.stdin,
+//   output: process.stdout,
+// });
 
 //Uncomment these changes for production
 
@@ -115,15 +124,35 @@ app.get(
     res.redirect(process.env.SUCCESS_REDIRECT); //'https://app-buddy.netlify.app'
   }
 );
-const oAuth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.CALLBACK_URL
-);
+// const oAuth2Client = new google.auth.OAuth2(
+//   process.env.GOOGLE_CLIENT_ID,
+//   process.env.GOOGLE_CLIENT_SECRET,
+//   process.env.CALLBACK_URL
+// );
+
+// // Promisify with promise
+// const readFileAsync = promisify(fs.readFile);
+// const writeFileAsync = promisify(fs.writeFile);
+// const rlQuestionAsync = promisify(rl.question);
+
+// const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+// const TOKEN_DIR = __dirname;
+// const TOKEN_PATH = TOKEN_DIR+'/gmail-nodejs-quickstart.json';
+// const readEmail = async () =>{
+//         // Access the gmail via API
+//         const response = await gmailListLabesAsync({
+//             auth: oauth2Client,
+//             userId: profile.id,
+//         });
+//         // display the result
+//         console.log(response.data);
+// }
 
 app.use("/sheet", sheetRoutes);
 
 app.use("/user", userRoutes);
+
+// app.use("/mail", mailRoutes);
 
 app.listen(8000, () => {
   console.log("Server Started");

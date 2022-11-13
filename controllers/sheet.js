@@ -18,7 +18,6 @@ export const createSheet = async (req, res) => {
     .select("tokens")
     .eq("user_id", req.user.id);
 
-
   oAuth2Client.setCredentials(data[0].tokens);
 
   const service = google.sheets({ version: "v4", auth: oAuth2Client });
@@ -160,10 +159,23 @@ export const createSheet = async (req, res) => {
   console.log(req.user.id);
 
   const { sheet_data, err } = await supabase
-    .from('Users')
+    .from("Users")
     .update({ sheet_id: spreadsheet.data.spreadsheetId })
-    .eq('user_id', req.user.id)
+    .eq("user_id", req.user.id);
 
+  const getRows = await service.spreadsheets.values.get({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: "Sheet1",
+  });
+  var objs = getRows.data.values.map((x) => ({
+    company_name: x[0],
+    position: x[1],
+    deadline: x[2],
+    oa_link: x[3],
+    status: x[4],
+  }));
+  objs.shift();
+  console.log(objs);
   console.log(sheet_data);
   console.log("supa error", err);
 };
@@ -173,8 +185,8 @@ export const getCompanyList = async (req, res) => {
     spreadsheetId: spreadsheet.data.spreadsheetId,
     range: "Sheet1",
   });
-  console.log(getRows.data.values);
+  // console.log("here" + getCompanyList.data.values);
 };
 
-export const insertCompany = async (req, res) => { };
-export const insertOAData = async (req, res) => { };
+export const insertCompany = async (req, res) => {};
+export const insertOAData = async (req, res) => {};
