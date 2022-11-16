@@ -12,20 +12,21 @@ const oAuth2Client = new google.auth.OAuth2(
   process.env.CALLBACK_URL
 );
 oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
-// console.log(req.params.email);
 
-// export async function getUser(req, res) {
-//   try {
-//     const url = `https://gmail.googleapis.com/gmail/v1/users/${req.params.email}/profile`;
-//     const { token } = await oAuth2Client.getAccessToken();
-//     const config = generateConfig(url, token);
-//     const response = await axios(config);
-//     res.json(response.data);
-//   } catch (error) {
-//     console.log(error);
-//     res.send(error);
-//   }
-// }
+export async function getUser(req, res) {
+  console.log(req.params);
+  try {
+    const url = `https://gmail.googleapis.com/gmail/v1/users/sachinsharma250197@gmail.com/profile`;
+    const { token } = await oAuth2Client.getAccessToken();
+    const config = generateConfig(url, token);
+    const response = await axios(config);
+    res.json(response.data);
+    console.log(response.data);
+  } catch (error) {
+    console.log(error);
+    res.send(error);
+  }
+}
 // export async function readMail(req, res) {
 //   try {
 //     const url = `https://gmail.googleapis.com//gmail/v1/users/sid.cd.varma@gmail.com/messages/17f63b4513fb51c0`;
@@ -41,5 +42,3 @@ oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
 //     res.send(error);
 //   }
 // }
-
-// module.exports = { readMail, getUser };
