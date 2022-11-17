@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
 
-import { createSheet, getCompanyList, insertCompany, insertOAData } from '../controllers/sheet.js'
+import { createSheet, getCompanyList, insertCompany, insertOAData, getAllData } from '../controllers/sheet.js'
 
 router.post("/", createSheet);
 router.get("/getAllData", getAllData)

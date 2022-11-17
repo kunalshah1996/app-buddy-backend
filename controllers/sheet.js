@@ -165,42 +165,85 @@ export const createSheet = async (req, res) => {
       }
     }
   );
-  const getRows = await service.spreadsheets.values.get({
-    spreadsheetId: spreadsheet.data.spreadsheetId,
-    range: "A:A",
-  });
-  console.log(getRows.data.values);
+  // const getRows = await service.spreadsheets.values.get({
+  //   spreadsheetId: spreadsheet.data.spreadsheetId,
+  //   range: "A:A",
+  // });
+  // console.log(getRows.data.values);
 
 
-  res.status(200).send(spreadsheet.data.spreadsheetId);
+  // res.status(200).send(spreadsheet.data.spreadsheetId);
 
-  //Read rows
-  console.log(req.user.id);
+  // //Read rows
+  // console.log(req.user.id);
 
   const { sheet_data, err } = await supabase
     .from("Users")
     .update({ sheet_id: spreadsheet.data.spreadsheetId })
     .eq("user_id", req.user.id);
 
-  getRows = await service.spreadsheets.values.get({
-    spreadsheetId: spreadsheet.data.spreadsheetId,
-    range: "Sheet1",
-  });
-  var objs = getRows.data.values.map((x) => ({
-    company_name: x[0],
-    position: x[1],
-    deadline: x[2],
-    oa_link: x[3],
-    status: x[4],
-  }));
-  objs.shift();
-  console.log(objs);
-  console.log(sheet_data);
-  console.log("supa error", err);
+
 
 
 };
 
+export const getAllData = async (req, res) => {
+
+  let { data, error } = await supabase
+    .from("Users")
+    .select("tokens")
+    .eq("user_id", req.user.id);
+
+  oAuth2Client.setCredentials(data[0].tokens);
+
+  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+
+  let { data: sheet_id, er } = await supabase
+    .from("Users")
+    .select("sheet_id")
+    .eq("user_id", req.user.id);
+
+
+  let spreadsheet = await service.spreadsheets.get({
+    spreadsheetId: sheet_id[0].sheet_id,
+  });
+
+  const getRows = await service.spreadsheets.values.get({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: "Sheet1",
+  });
+  // var objs = getRows.data.values.map((x) => ({
+  //   company_name: x[0],
+  //   position: x[1],
+  //   deadline: x[2],
+  //   oa_link: x[3],
+  //   status: x[4],
+  // }));
+  // objs.shift();
+  // console.log(objs);
+  const board_data = {
+    'tasks': {
+      'task-1': { 'id': 'task-1', 'content': 'Take out the garbage' },
+      'task-2': { 'id': 'task-2', 'content': 'Watch my favorite show' },
+      'task-3': { 'id': 'task-3', 'content': 'Charge my phone' },
+    },
+    'columns': {
+      'column-1': {
+        'id': 'column-1',
+        'title': 'To do',
+        'taskIds': ['task-2', 'task-3'],
+      },
+      'column-2': {
+        'id': 'column-2',
+        'title': 'In progress',
+        'taskIds': ['task-1'],
+      }
+    },
+    'columnOrder': ['column-1', 'column-2']
+  };
+
+  res.json({ 'board': board_data });
+}
 export const getCompanyList = async (req, res) => {
   getRows = await service.spreadsheets.values.get({
     spreadsheetId: spreadsheet.data.spreadsheetId,
