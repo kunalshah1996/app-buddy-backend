@@ -225,7 +225,7 @@ export const getAllData = async (req, res) => {
       position: element.position,
       deadline: element.deadline,
       oa_link: element.oa_link,
-      id: element.id,
+      id: `${element.id}`,
       status: element.status,
     };
   });
@@ -251,18 +251,18 @@ export const getAllData = async (req, res) => {
     columns: {
       "column-1": {
         id: "column-1",
-        title: grouped[0].title,
-        taskIds: grouped[0].taskIds,
-      },
-      "column-2": {
-        id: "column-2",
         title: grouped[1].title,
         taskIds: grouped[1].taskIds,
       },
-      "column-3": {
-        id: "column-3",
+      "column-2": {
+        id: "column-2",
         title: grouped[2].title,
         taskIds: grouped[2].taskIds,
+      },
+      "column-3": {
+        id: "column-3",
+        title: grouped[0].title,
+        taskIds: grouped[0].taskIds,
       },
     },
     columnOrder: ["column-1", "column-2", "column-3"],
@@ -308,5 +308,5 @@ export const getCompanyList = async (req, res) => {
   console.log(getRows);
 };
 
-export const insertCompany = async (req, res) => {};
-export const insertOAData = async (req, res) => {};
+export const insertCompany = async (req, res) => { };
+export const insertOAData = async (req, res) => { };
