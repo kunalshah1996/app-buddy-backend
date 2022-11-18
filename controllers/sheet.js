@@ -1,7 +1,6 @@
 import express from "express";
 import { google } from "googleapis";
 import { supabase } from "../supabaseClient.js";
-
 import axios from "axios";
 import { generateConfig } from "../utils.js";
 import * as dotenv from "dotenv";
@@ -193,7 +192,6 @@ export const createSheet = async (req, res) => {
   }));
   objs.shift();
   let tasks = {};
-  let colmns = {};
 
   objs.forEach((element) => {
     var idKey = element.id;
@@ -256,54 +254,60 @@ export const createSheet = async (req, res) => {
   // console.log(sheet_data);
   // console.log("supa error", err);
 
-  //date
-  const today = () => {
-    var utc = new Date().toJSON().slice(0, 10).replace(/-/g, "/");
-    return utc;
-  };
-  const getDaysInMonth = (year, month) => new Date(year, month, 0).getDate();
-  const addMonths = (input, months) => {
-    const date = new Date(input);
-    date.setDate(1);
-    date.setMonth(date.getMonth() + months);
-    date.setDate(
-      Math.min(
-        input.getDate(),
-        getDaysInMonth(date.getFullYear(), date.getMonth() + 1)
-      )
-    );
-    return date;
-  };
-  var requiredDate = addMonths(new Date(), -6)
-    .toJSON()
-    .slice(0, 10)
-    .replace(/-/g, "/");
-  var user_company = "citadel";
+  const getCompanyList = await service.spreadsheets.values.get({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: "A:A",
+  });
+  let companyList = getCompanyList.data.values;
+  const user_company = [].concat(...companyList);
+  user_company.shift();
+  console.log(user_company);
+
   //read gmail
-  const SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"];
   async function getLink(auth) {
     const gmail = google.gmail({ version: "v1", auth });
-    const res = await gmail.users.messages.list({
-      userId: req.user.id,
-      q:
-        "to:me " +
-        user_company +
-        "assessment after:" +
-        requiredDate +
-        " before:" +
-        today(),
+    user_company.forEach(async (company) => {
+      var query =
+        "to:me newer_than:2d +" +
+        company +
+        " +invited OR +" +
+        company +
+        " +duration OR +" +
+        company +
+        " +test OR +" +
+        company +
+        " +assessment in:anywhere";
+
+      console.log(query);
+
+      const res = await gmail.users.messages.list({
+        userId: req.user.id,
+        q: query,
+      });
+      const mailID = res.data.messages;
+      // console.log(mailID);
+      if (!mailID || mailID.length === 0) {
+        console.log("No IDs found.");
+        return;
+      }
+
+      mailID.forEach(async (element) => {
+        const mail = await gmail.users.messages.get({
+          userId: req.user.id,
+          id: String(element.id),
+        });
+        const mailres = mail.data.payload.parts[0].body.data;
+        if (!mailres || mailres.length === 0) {
+          console.log("No IDs found.");
+          return;
+        } else {
+          const mailBody = new Buffer(mailres, "base64").toString();
+          console.log(mailBody);
+        }
+      });
     });
-    const mailID = res.data.messages;
-    // console.log(mailID);
-    if (!mailID || mailID.length === 0) {
-      // console.log("No IDs found.");
-      return;
-    }
-    // mailID.forEach((label) => {
-    //   console.log(`- ${label.name}`);
-    // });
   }
-  // console.log(getLink(oAuth2Client));
+  getLink(oAuth2Client);
 };
 
 export const getCompanyList = async (req, res) => {
@@ -312,7 +316,6 @@ export const getCompanyList = async (req, res) => {
     range: "A:A",
   });
   // console.log("here" + getCompanyList.data.values);
-  // console.log(getRows);
 };
 
 export const insertCompany = async (req, res) => {};
