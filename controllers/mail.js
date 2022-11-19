@@ -12,68 +12,84 @@ const oAuth2Client = new google.auth.OAuth2(
 
 export const getMail = async (req, res) => {
   const mails_list = []
+  try {
+    let { data, error } = await supabase
+      .from("Users")
+      .select("tokens")
+      .eq("user_id", req.user.id);
+  } catch (error) {
+    console.log(error);
+  }
 
-  let { data, error } = await supabase
-    .from("Users")
-    .select("tokens")
-    .eq("user_id", req.user.id);
 
   oAuth2Client.setCredentials(data[0].tokens);
 
-  let { data: sheet_id, er } = await supabase
-    .from("Users")
-    .select("sheet_id")
-    .eq("user_id", req.user.id);
+  try {
+    let { data: sheet_id, er } = await supabase
+      .from("Users")
+      .select("sheet_id")
+      .eq("user_id", req.user.id);
+  } catch (error) {
+    console.log(error);
+  }
+
 
 
   const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
-  const getCompanyList = await service.spreadsheets.values.get({
-    spreadsheetId: sheet_id[0].sheet_id,
-    range: "A:A",
-  });
-  let companyList = getCompanyList.data.values;
-  const user_company = [].concat(...companyList);
-  user_company.shift();
+
+  try {
+    const getCompanyList = await service.spreadsheets.values.get({
+      spreadsheetId: sheet_id[0].sheet_id,
+      range: "A:A",
+    });
+    let companyList = getCompanyList.data.values;
+    const user_company = [].concat(...companyList);
+    user_company.shift();
 
 
-  //read gmail
+    //read gmail
 
-  const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+    const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
-  // user_company.forEach(async (company) => {
-  var query =
-    "to:me newer_than:2d +" +
-    user_company[1] +
-    " +invited OR +" +
-    user_company[1] +
-    " +duration OR +" +
-    user_company[1] +
-    " +test OR +" +
-    user_company[1] +
-    " +assessment in:anywhere";
-  // console.log(query);
+    // user_company.forEach(async (company) => {
+    var query =
+      "to:me newer_than:2d +" +
+      user_company[1] +
+      " +invited OR +" +
+      user_company[1] +
+      " +duration OR +" +
+      user_company[1] +
+      " +test OR +" +
+      user_company[1] +
+      " +assessment in:anywhere";
+    // console.log(query);
 
-  const id_res = await gmail.users.messages.list({
-    userId: req.user.id,
-    q: query,
-  });
-  const mailID = id_res.data.messages;
-  // console.log(mailID);
+    const id_res = await gmail.users.messages.list({
+      userId: req.user.id,
+      q: query,
+    });
+    const mailID = id_res.data.messages;
+    // console.log(mailID);
 
-  // mailID.forEach(async (element) => {
-  const mail = await gmail.users.messages.get({
-    userId: req.user.id,
-    id: String(mailID[1].id),
-  });
-  const mailres = mail.data.payload.parts[0].body.data;
+    // mailID.forEach(async (element) => {
+    const mail = await gmail.users.messages.get({
+      userId: req.user.id,
+      id: String(mailID[1].id),
+    });
+    const mailres = mail.data.payload.parts[0].body.data;
 
-  const mailBody = new Buffer.from(mailres, "base64").toString();
-  // console.log(mailBody);
-  mails_list.push(mailBody)
-  let mails = { mail: mails_list[0] }
-  // });
-  res.send(mails)
+    const mailBody = new Buffer.from(mailres, "base64").toString();
+    // console.log(mailBody);
+    mails_list.push(mailBody)
+    let mails = { mail: mails_list[0] }
+    // });
+    res.send(mails)
+
+  } catch (error) {
+    console.log(error);
+  }
+
   // });
 
 }
