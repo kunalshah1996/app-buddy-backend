@@ -1,44 +1,80 @@
-import axios from "axios";
-import { generateConfig } from "../utils.js";
-// const nodemailer = require("nodemailer");
-// const CONSTANTS = require("./constants");
 import { google } from "googleapis";
 import * as dotenv from "dotenv";
 dotenv.config();
+
+import { supabase } from "../supabaseClient.js";
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.CALLBACK_URL
 );
-oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
 
-export async function getUser(req, res) {
-  console.log(req.params);
-  try {
-    const url = `https://gmail.googleapis.com/gmail/v1/users/sachinsharma250197@gmail.com/profile`;
-    const { token } = await oAuth2Client.getAccessToken();
-    const config = generateConfig(url, token);
-    const response = await axios(config);
-    res.json(response.data);
-    console.log(response.data);
-  } catch (error) {
-    console.log(error);
-    res.send(error);
-  }
-}
-// export async function readMail(req, res) {
-//   try {
-//     const url = `https://gmail.googleapis.com//gmail/v1/users/sid.cd.varma@gmail.com/messages/17f63b4513fb51c0`;
-//     const { token } = await oAuth2Client.getAccessToken();
-//     const config = generateConfig(url, token);
-//     const response = await axios(config);
+export const getMail = async (req, res) => {
+  const mails_list = [];
 
-//     let data = await response.data;
-//     console.log(data);
+  let { data, error } = await supabase
+    .from("Users")
+    .select("tokens")
+    .eq("user_id", req.user.id);
 
-//     res.json(data);
-//   } catch (error) {
-//     res.send(error);
-//   }
-// }
+  oAuth2Client.setCredentials(data[0].tokens);
+
+  let { data: sheet_id, er } = await supabase
+    .from("Users")
+    .select("sheet_id")
+    .eq("user_id", req.user.id);
+
+  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+
+  const getCompanyList = await service.spreadsheets.values.get({
+    spreadsheetId: sheet_id[0].sheet_id,
+    range: "A:A",
+  });
+  let companyList = getCompanyList.data.values;
+  const user_company = [].concat(...companyList);
+  user_company.shift();
+
+  //read gmail
+
+  const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+
+  user_company.forEach(async (company) => {
+    var query =
+      "to:me newer_than:2d +" +
+      company +
+      " +invited OR +" +
+      company +
+      " +duration OR +" +
+      company +
+      " +test OR +" +
+      company +
+      " +assessment in:anywhere";
+    // console.log(query);
+
+    const id_res = await gmail.users.messages.list({
+      userId: req.user.id,
+      q: query,
+    });
+    const mailID = id_res.data.messages;
+    // console.log(mailID);
+    if (!mailID || mailID.length === 0) {
+      return;
+    }
+    mailID.forEach(async (element) => {
+      const mail = await gmail.users.messages.get({
+        userId: req.user.id,
+        id: String(element.id),
+      });
+      const mailres = mail.data.payload.parts[0].body.data;
+      if (!mailres || mailres.length === 0) {
+        return;
+      } else {
+        const mailBody = new Buffer.from(mailres, "base64").toString();
+        // console.log(mailBody);
+        mails_list.push(mailBody);
+      }
+    });
+  });
+  console.log(mails_list);
+};

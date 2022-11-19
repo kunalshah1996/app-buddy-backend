@@ -15,6 +15,11 @@ import mailRoutes from "./routes/mail.js";
 dotenv.config();
 
 const app = express();
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> dev
 
 //Uncomment these changes for production
 
@@ -52,6 +57,10 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((user, done) => {
   return done(null, user);
 });
+<<<<<<< HEAD
+=======
+
+>>>>>>> dev
 
 passport.use(
   new GoogleStrategy(
@@ -109,7 +118,7 @@ app.post("/logout", function (req, res) {
     if (err) {
       console.log(err);
     }
-    res.status(200).redirect(process.env.FAILURE_REDIRECT);
+    res.status(200).send("Logged out");
   });
 });
 
@@ -122,11 +131,15 @@ app.get(
     res.redirect(process.env.SUCCESS_REDIRECT); //'https://app-buddy.netlify.app'
   }
 );
+<<<<<<< HEAD
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.CALLBACK_URL
 );
+=======
+
+>>>>>>> dev
 
 app.use("/sheet", sheetRoutes);
 
