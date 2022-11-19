@@ -21,10 +21,12 @@
   "homepage": "https://github.com/kunalshah1996/app-buddy-backend#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.0.5",
+    "axios": "^1.1.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+    "googleapis": "^109.0.1",
     "passport": "^0.6.0",
     "passport-google-oauth2": "^0.2.0"
   }
