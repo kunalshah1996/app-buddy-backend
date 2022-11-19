@@ -261,7 +261,7 @@ export const createSheet = async (req, res) => {
   let companyList = getCompanyList.data.values;
   const user_company = [].concat(...companyList);
   user_company.shift();
-  console.log(user_company);
+  // console.log(user_company);
 
   //read gmail
   async function getLink(auth) {
@@ -277,8 +277,7 @@ export const createSheet = async (req, res) => {
         " +test OR +" +
         company +
         " +assessment in:anywhere";
-
-      console.log(query);
+      // console.log(query);
 
       const res = await gmail.users.messages.list({
         userId: req.user.id,
@@ -298,11 +297,11 @@ export const createSheet = async (req, res) => {
         });
         const mailres = mail.data.payload.parts[0].body.data;
         if (!mailres || mailres.length === 0) {
-          console.log("No IDs found.");
+          console.log("No emails found.");
           return;
         } else {
-          const mailBody = new Buffer(mailres, "base64").toString();
-          console.log(mailBody);
+          const mailBody = new Buffer.from(mailres, "base64").toString();
+          // console.log(mailBody);
         }
       });
     });
