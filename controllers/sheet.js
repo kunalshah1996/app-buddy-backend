@@ -19,28 +19,18 @@ export const createSheet = async (req, res) => {
       .from("Users")
       .select("tokens")
       .eq("user_id", req.user.id);
-  } catch (error) {
-    console.log(error);
-  }
 
+    oAuth2Client.setCredentials(data[0].tokens);
 
-  oAuth2Client.setCredentials(data[0].tokens);
+    const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
-  const service = google.sheets({ version: "v4", auth: oAuth2Client });
-
-  try {
     let { data: sheet_id, er } = await supabase
       .from("Users")
       .select("sheet_id")
       .eq("user_id", req.user.id);
-  } catch (error) {
-    console.log(error);
-  }
 
-
-  let spreadsheet;
-  if (!sheet_id[0].sheet_id) {
-    try {
+    let spreadsheet;
+    if (!sheet_id[0].sheet_id) {
       spreadsheet = await service.spreadsheets.create({
         resource: {
           properties: { title: "Test Sheet" },
@@ -128,86 +118,73 @@ export const createSheet = async (req, res) => {
           ],
         },
       });
-    }
-    catch (error) {
-      console.log(error);
-    }
-
-  } else {
-    try {
+    } else {
       spreadsheet = await service.spreadsheets.get({
         spreadsheetId: sheet_id[0].sheet_id,
-      });
-    } catch (error) {
-      console.log(error);
+      })
     }
+    let values = [
+      [
+        "Amazon",
+        "Max",
+        "20-10-2023",
+        "",
+        "Interview",
+      ],
+      [
+        "Microsoft",
+        "SDE2",
+        "20-10-2024",
+        "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
+        "OA Received",
+      ],
+      [
+        "Oracle",
+        "SDE2",
+        "20-10-2024",
+        "",
+        "Applied",
+      ],
+    ];
+    let resource = {
+      values,
+    };
 
-  }
-
-  // Add rows
-  let values = [
-    [
-      "Amazon",
-      "Max",
-      "20-10-2023",
-      "",
-      "Interview",
-    ],
-    [
-      "Microsoft",
-      "SDE2",
-      "20-10-2024",
-      "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
-      "OA Received",
-    ],
-    [
-      "Oracle",
-      "SDE2",
-      "20-10-2024",
-      "",
-      "Applied",
-    ],
-  ];
-  let resource = {
-    values,
-  };
-
-  service.spreadsheets.values.append(
-    {
-      spreadsheetId: spreadsheet.data.spreadsheetId,
-      range: "Sheet1!A1:E1",
-      valueInputOption: "RAW",
-      resource: resource,
-    },
-    (err, result) => {
-      if (err) {
-        // Handle error.
-        console.log(err);
+    service.spreadsheets.values.append(
+      {
+        spreadsheetId: spreadsheet.data.spreadsheetId,
+        range: "Sheet1!A1:E1",
+        valueInputOption: "RAW",
+        resource: resource,
+      },
+      (err, result) => {
+        if (err) {
+          // Handle error.
+          console.log(err);
+        }
       }
-    }
-  );
-  // const getRows = await service.spreadsheets.values.get({
-  //   spreadsheetId: spreadsheet.data.spreadsheetId,
-  //   range: "A:A",
-  // });
-  // console.log(getRows.data.values);
+    );
+    // const getRows = await service.spreadsheets.values.get({
+    //   spreadsheetId: spreadsheet.data.spreadsheetId,
+    //   range: "A:A",
+    // });
+    // console.log(getRows.data.values);
 
-  // res.status(200).send(spreadsheet.data.spreadsheetId);
+    // res.status(200).send(spreadsheet.data.spreadsheetId);
 
-  // //Read rows
-  // console.log(req.user.id);
-
-  res.send(spreadsheet.data.spreadsheetId);
-  try {
+    // //Read rows
+    // console.log(req.user.id);
     const { sheet_data, err } = await supabase
       .from("Users")
       .update({ sheet_id: spreadsheet.data.spreadsheetId })
       .eq("user_id", req.user.id);
 
+
+    res.send(spreadsheet.data.spreadsheetId);
+
   } catch (error) {
     console.log(error);
   }
-
 };
 
 export const getAllData = async (req, res) => {
@@ -216,17 +193,11 @@ export const getAllData = async (req, res) => {
       .from("Users")
       .select("tokens")
       .eq("user_id", req.user.id);
-  } catch (error) {
-    console.log(error);
-  }
 
+    oAuth2Client.setCredentials(data[0].tokens);
 
+    const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
-  oAuth2Client.setCredentials(data[0].tokens);
-
-  const service = google.sheets({ version: "v4", auth: oAuth2Client });
-
-  try {
     let { data: sheet_id, er } = await supabase
       .from("Users")
       .select("sheet_id")
@@ -304,13 +275,10 @@ export const getAllData = async (req, res) => {
     };
 
     res.send({ board: board_data });
+
   } catch (error) {
     console.log(error);
   }
-
-
-
-
 };
 
 export const getSheetId = async (req, res) => {

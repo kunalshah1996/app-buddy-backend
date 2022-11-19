@@ -11,34 +11,30 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 
 export const getMail = async (req, res) => {
-  const mails_list = []
+
   try {
+    const mails_list = [];
+
     let { data, error } = await supabase
       .from("Users")
       .select("tokens")
       .eq("user_id", req.user.id);
-  } catch (error) {
-    console.log(error);
-  }
 
 
-  oAuth2Client.setCredentials(data[0].tokens);
 
-  try {
+    oAuth2Client.setCredentials(data[0].tokens);
+
+
     let { data: sheet_id, er } = await supabase
       .from("Users")
       .select("sheet_id")
       .eq("user_id", req.user.id);
-  } catch (error) {
-    console.log(error);
-  }
 
 
 
-  const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
+    const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
-  try {
     const getCompanyList = await service.spreadsheets.values.get({
       spreadsheetId: sheet_id[0].sheet_id,
       range: "A:A",
@@ -86,10 +82,11 @@ export const getMail = async (req, res) => {
     // });
     res.send(mails)
 
+
+
+    // });
+
   } catch (error) {
     console.log(error);
   }
-
-  // });
-
-}
+};
