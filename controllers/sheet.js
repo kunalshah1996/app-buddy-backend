@@ -13,7 +13,6 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 
 export const createSheet = async (req, res) => {
-
   try {
     let { data, error } = await supabase
       .from("Users")
@@ -122,30 +121,14 @@ export const createSheet = async (req, res) => {
     } else {
       spreadsheet = await service.spreadsheets.get({
         spreadsheetId: sheet_id[0].sheet_id,
-      })
+      });
     }
+    //dummy data
     let values = [
-      [
-        "Amazon",
-        "Max",
-        "20-10-2023",
-        "",
-        "Interview",
-      ],
-      [
-        "Microsoft",
-        "SDE2",
-        "20-10-2024",
-        "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
-        "OA Received",
-      ],
-      [
-        "Oracle",
-        "SDE2",
-        "20-10-2024",
-        "",
-        "Applied",
-      ],
+      ["Goldman Sachs", "Data Analyst", "", "", "Interview"],
+      ["Visa", "SDE2", "", "", "OA Received"],
+      ["Citadel", "Web Developer", "", "", "Applied"],
+      ["Roblox", "System Analyst", "", "", "OA Received"],
     ];
     let resource = {
       values,
@@ -171,9 +154,7 @@ export const createSheet = async (req, res) => {
       .update({ sheet_id: spreadsheet.data.spreadsheetId })
       .eq("user_id", req.user.id);
 
-
     res.send(spreadsheet.data.spreadsheetId);
-
   } catch (error) {
     console.log(error);
   }
@@ -267,7 +248,6 @@ export const getAllData = async (req, res) => {
     };
 
     res.send({ board: board_data });
-
   } catch (error) {
     console.log(error);
   }
@@ -282,16 +262,13 @@ export const getSheetId = async (req, res) => {
         .eq("user_id", req.user.id);
 
       res.json({ sheet_id: sheet_id[0].sheet_id });
-    }
-    else {
-      res.json({ sheet_id: null })
+    } else {
+      res.json({ sheet_id: null });
     }
   } catch (error) {
     console.log(error);
   }
-
-}
-
+};
 
 export const getCompanyList = async (req, res) => {
   let { data, error } = await supabase
@@ -317,8 +294,7 @@ export const getCompanyList = async (req, res) => {
     range: "A:A",
   });
   // console.log("here" + getCompanyList.data.values);
-
 };
 
-export const insertCompany = async (req, res) => { };
-export const insertOAData = async (req, res) => { };
+export const insertCompany = async (req, res) => {};
+export const insertOAData = async (req, res) => {};
