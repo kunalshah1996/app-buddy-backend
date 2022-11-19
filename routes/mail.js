@@ -1,8 +1,7 @@
-// import express from "express";
-// const router = express.Router();
-// import { readMail, getUser } from "../controllers/mail.js";
+import express from "express";
+const router = express.Router();
+import { getMail } from "../controllers/mail.js";
 
-// router.get("/read", readMail);
-// router.get("/user", getUser);
+router.get("/getMail", getMail);
 
-// export default router;
+export default router;
