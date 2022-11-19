@@ -21,7 +21,7 @@ export const getMail = async (req, res) => {
       .eq("user_id", req.user.id);
 
 
-
+    console.log(data[0].tokens);
     oAuth2Client.setCredentials(data[0].tokens);
 
 

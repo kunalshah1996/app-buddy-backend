@@ -19,6 +19,7 @@ export const createSheet = async (req, res) => {
       .from("Users")
       .select("tokens")
       .eq("user_id", req.user.id);
+    console.log(data[0].tokens);
 
     oAuth2Client.setCredentials(data[0].tokens);
 
@@ -164,16 +165,7 @@ export const createSheet = async (req, res) => {
         }
       }
     );
-    // const getRows = await service.spreadsheets.values.get({
-    //   spreadsheetId: spreadsheet.data.spreadsheetId,
-    //   range: "A:A",
-    // });
-    // console.log(getRows.data.values);
 
-    // res.status(200).send(spreadsheet.data.spreadsheetId);
-
-    // //Read rows
-    // console.log(req.user.id);
     const { sheet_data, err } = await supabase
       .from("Users")
       .update({ sheet_id: spreadsheet.data.spreadsheetId })
@@ -193,7 +185,7 @@ export const getAllData = async (req, res) => {
       .from("Users")
       .select("tokens")
       .eq("user_id", req.user.id);
-
+    console.log(data[0].tokens);
     oAuth2Client.setCredentials(data[0].tokens);
 
     const service = google.sheets({ version: "v4", auth: oAuth2Client });
