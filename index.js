@@ -109,6 +109,7 @@ app.get(
       "https://www.googleapis.com/auth/spreadsheets",
     ],
     accessType: "offline",
+    prompt: 'consent',
   })
 );
 
