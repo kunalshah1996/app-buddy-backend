@@ -26,11 +26,10 @@ export const createSheet = async (req, res) => {
     .from("Users")
     .select("sheet_id")
     .eq("user_id", req.user.id);
-  console.log(sheet_id[0].sheet_id);
 
   let spreadsheet;
   if (!sheet_id[0].sheet_id) {
-    spreadsheet = service.spreadsheets.create({
+    spreadsheet = await service.spreadsheets.create({
       resource: {
         properties: { title: "Test Sheet" },
 
@@ -122,34 +121,35 @@ export const createSheet = async (req, res) => {
       spreadsheetId: sheet_id[0].sheet_id,
     });
   }
-  console.log("Spreadsheet", spreadsheet.data.spreadsheetId);
-  //Add rows
+
+  // Add rows
   let values = [
     [
-      "amazon",
+      "Amazon",
       "Max",
       "20-10-2023",
-      "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
-      "interview",
+      "",
+      "Interview",
     ],
     [
-      "microsoft",
+      "Microsoft",
       "SDE2",
       "20-10-2024",
       "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
-      "interview",
+      "OA Received",
     ],
     [
       "Oracle",
       "SDE2",
       "20-10-2024",
-      "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
-      "interview",
+      "",
+      "Applied",
     ],
   ];
   let resource = {
     values,
   };
+
   service.spreadsheets.values.append(
     {
       spreadsheetId: spreadsheet.data.spreadsheetId,
@@ -174,6 +174,8 @@ export const createSheet = async (req, res) => {
 
   // //Read rows
   // console.log(req.user.id);
+
+  res.send(spreadsheet.data.spreadsheetId);
 
   const { sheet_data, err } = await supabase
     .from("Users")
@@ -267,45 +269,51 @@ export const getAllData = async (req, res) => {
     },
     columnOrder: ["column-1", "column-2", "column-3"],
   };
-  // var objs = getRows.data.values.map((x) => ({
-  //   company_name: x[0],
-  //   position: x[1],
-  //   deadline: x[2],
-  //   oa_link: x[3],
-  //   status: x[4],
-  // }));
-  // objs.shift();
-  // console.log(objs);
-  // const board_data = {
-  //   'tasks': {
-  //     'task-1': { 'id': 'task-1', 'content': 'Take out the garbage' },
-  //     'task-2': { 'id': 'task-2', 'content': 'Watch my favorite show' },
-  //     'task-3': { 'id': 'task-3', 'content': 'Charge my phone' },
-  //   },
-  //   'columns': {
-  //     'column-1': {
-  //       'id': 'column-1',
-  //       'title': 'To do',
-  //       'taskIds': ['task-2', 'task-3'],
-  //     },
-  //     'column-2': {
-  //       'id': 'column-2',
-  //       'title': 'In progress',
-  //       'taskIds': ['task-1'],
-  //     }
-  //   },
-  //   'columnOrder': ['column-1', 'column-2']
-  // };
 
   res.json({ board: board_data });
 };
+
+export const getSheetId = async (req, res) => {
+
+  if (req.user) {
+    let { data: sheet_id, er } = await supabase
+      .from("Users")
+      .select("sheet_id")
+      .eq("user_id", req.user.id);
+
+    res.json({ sheet_id: sheet_id[0].sheet_id });
+  }
+  else {
+    res.json({ sheet_id: null })
+  }
+}
+
+
 export const getCompanyList = async (req, res) => {
+  let { data, error } = await supabase
+    .from("Users")
+    .select("tokens")
+    .eq("user_id", req.user.id);
+
+  oAuth2Client.setCredentials(data[0].tokens);
+
+  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+
+  let { data: sheet_id, er } = await supabase
+    .from("Users")
+    .select("sheet_id")
+    .eq("user_id", req.user.id);
+
+  let spreadsheet = await service.spreadsheets.get({
+    spreadsheetId: sheet_id[0].sheet_id,
+  });
+
   getRows = await service.spreadsheets.values.get({
     spreadsheetId: spreadsheet.data.spreadsheetId,
     range: "A:A",
   });
   // console.log("here" + getCompanyList.data.values);
-  console.log(getRows);
+
 };
 
 export const insertCompany = async (req, res) => { };

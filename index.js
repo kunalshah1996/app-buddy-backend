@@ -14,14 +14,8 @@ import sheetRoutes from "./routes/sheet.js";
 dotenv.config();
 
 const app = express();
-const gmail = google.gmail("v1");
-// const { promisify } = require("util");
-// const fs = require("fs");
-// const readline = require("readline");
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-// });
+
+
 
 //Uncomment these changes for production
 
@@ -59,9 +53,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((user, done) => {
   return done(null, user);
 });
-// GoogleStrategy.prototype.userProfile = function(token, done) {
-//     done(null, {})
-//   }
+
 
 passport.use(
   new GoogleStrategy(
@@ -111,7 +103,7 @@ app.post("/logout", function (req, res) {
     if (err) {
       console.log(err);
     }
-    res.status(200).redirect(process.env.FAILURE_REDIRECT);
+    res.status(200).send("Logged out");
   });
 });
 
