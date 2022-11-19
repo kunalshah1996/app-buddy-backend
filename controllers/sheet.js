@@ -270,7 +270,7 @@ export const getAllData = async (req, res) => {
     columnOrder: ["column-1", "column-2", "column-3"],
   };
 
-  res.json({ board: board_data });
+  res.send({ board: board_data });
 };
 
 export const getSheetId = async (req, res) => {

@@ -71,8 +71,9 @@ export const getMail = async (req, res) => {
   const mailBody = new Buffer.from(mailres, "base64").toString();
   // console.log(mailBody);
   mails_list.push(mailBody)
+  let mails = { mail: mails_list[0] }
   // });
-  res.send(mails_list)
+  res.send(mails)
   // });
 
 }
