@@ -127,13 +127,7 @@ export const createSheet = async (req, res) => {
 
   // Add rows
   let values = [
-    [
-      "Amazon",
-      "Max",
-      "20-10-2023",
-      "",
-      "Interview",
-    ],
+    ["Amazon", "Max", "20-10-2023", "", "Interview"],
     [
       "Microsoft",
       "SDE2",
@@ -141,13 +135,7 @@ export const createSheet = async (req, res) => {
       "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
       "OA Received",
     ],
-    [
-      "Oracle",
-      "SDE2",
-      "20-10-2024",
-      "",
-      "Applied",
-    ],
+    ["Oracle", "SDE2", "20-10-2024", "", "Applied"],
   ];
   let resource = {
     values,
@@ -186,14 +174,11 @@ export const createSheet = async (req, res) => {
     .eq("user_id", req.user.id);
 };
 
-<<<<<<< HEAD
-=======
 export const getAllData = async (req, res) => {
   // let { data: board_fetch, err } = await supabase
   //   .from("Users")
   //   .select("board")
   //   .eq("user_id", req.user.id);
-
 
   let { data, error } = await supabase
     .from("Users")
@@ -213,7 +198,6 @@ export const getAllData = async (req, res) => {
     spreadsheetId: sheet_id[0].sheet_id,
   });
 
->>>>>>> dev
   const getRows = await service.spreadsheets.values.get({
     spreadsheetId: spreadsheet.data.spreadsheetId,
     range: "Sheet1",
@@ -260,34 +244,41 @@ export const getAllData = async (req, res) => {
   };
   let grouped = transformArray(task);
 
-
   let board_data = {
     tasks: tasks ? tasks : [],
     columns: {
       "column-1": {
         id: "column-1",
         title: "Applied",
-        taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'Applied').taskIds : [],
+        taskIds:
+          grouped.length > 1
+            ? grouped.find((x) => x.title === "Applied").taskIds
+            : [],
       },
       "column-2": {
         id: "column-2",
         title: "OA Received",
-        taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'OA Received').taskIds : [],
+        taskIds:
+          grouped.length > 1
+            ? grouped.find((x) => x.title === "OA Received").taskIds
+            : [],
       },
       "column-3": {
         id: "column-3",
         title: "Interview",
-        taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'Interview').taskIds : [],
+        taskIds:
+          grouped.length > 1
+            ? grouped.find((x) => x.title === "Interview").taskIds
+            : [],
       },
     },
     columnOrder: ["column-1", "column-2", "column-3"],
   };
 
-
   const { data: board, err } = await supabase
-    .from('Users')
+    .from("Users")
     .update({ board: board_data })
-    .eq('user_id', 'req.user.id')
+    .eq("user_id", "req.user.id");
 
   console.log(board, err);
 
@@ -295,7 +286,6 @@ export const getAllData = async (req, res) => {
 };
 
 export const getSheetId = async (req, res) => {
-
   if (req.user) {
     let { data: sheet_id, er } = await supabase
       .from("Users")
@@ -303,12 +293,10 @@ export const getSheetId = async (req, res) => {
       .eq("user_id", req.user.id);
 
     res.json({ sheet_id: sheet_id[0].sheet_id });
+  } else {
+    res.json({ sheet_id: null });
   }
-  else {
-    res.json({ sheet_id: null })
-  }
-}
-
+};
 
 export const getCompanyList = async (req, res) => {
   let { data, error } = await supabase
