@@ -64,7 +64,7 @@ export const getMail = async (req, res) => {
   // mailID.forEach(async (element) => {
   const mail = await gmail.users.messages.get({
     userId: req.user.id,
-    id: String(mailID[1].id),
+    id: String(mailID[0].id),
   });
   const mailres = mail.data.payload.parts[0].body.data;
 
