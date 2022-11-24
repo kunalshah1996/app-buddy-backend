@@ -29,12 +29,12 @@ const app = express();
 
 // app.use(cors({ origin: "https://app-buddy.netlify.app", credentials: true, methods: "GET, POST, PUT, DELETE" }));
 // app.use(function (req, res, next) {
-//     res.header("Access-Control-Allow-Credentials", true);
-//     res.header("Access-Control-Allow-Origin", "https://app-buddy.netlify.app");
-//     res.header("Access-Control-Allow-Headers",
-//         "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie");
-//     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-//     next();
+//   res.header("Access-Control-Allow-Credentials", true);
+//   res.header("Access-Control-Allow-Origin", "https://app-buddy.netlify.app");
+//   res.header("Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie");
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+//   next();
 // });
 
 app.use(express.json());
@@ -44,7 +44,7 @@ app.use(
     secret: "KunalSamruddhi",
     resave: false,
     saveUninitialized: false,
-    //cookie: { sameSite: 'none', secure: true }    //uncomment for production
+    // cookie: { sameSite: 'none', secure: true }    //uncomment for production
   })
 );
 app.use(passport.initialize());

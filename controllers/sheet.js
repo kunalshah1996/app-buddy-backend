@@ -189,6 +189,12 @@ export const createSheet = async (req, res) => {
 <<<<<<< HEAD
 =======
 export const getAllData = async (req, res) => {
+  // let { data: board_fetch, err } = await supabase
+  //   .from("Users")
+  //   .select("board")
+  //   .eq("user_id", req.user.id);
+
+
   let { data, error } = await supabase
     .from("Users")
     .select("tokens")
@@ -224,7 +230,7 @@ export const getAllData = async (req, res) => {
   let tasks = {};
 
   objs.forEach((element) => {
-    var idKey = element.id;
+    var idKey = `task-${element.id}`;
     if (!tasks[idKey]) {
       tasks[idKey] = {};
     }
@@ -233,7 +239,7 @@ export const getAllData = async (req, res) => {
       position: element.position,
       deadline: element.deadline,
       oa_link: element.oa_link,
-      id: `${element.id}`,
+      id: `task-${element.id}`,
       status: element.status,
     };
   });
@@ -254,27 +260,36 @@ export const getAllData = async (req, res) => {
   };
   let grouped = transformArray(task);
 
+
   let board_data = {
-    tasks: tasks,
+    tasks: tasks ? tasks : [],
     columns: {
       "column-1": {
         id: "column-1",
-        title: grouped[1].title,
-        taskIds: grouped[1].taskIds,
+        title: "Applied",
+        taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'Applied').taskIds : [],
       },
       "column-2": {
         id: "column-2",
-        title: grouped[2].title,
-        taskIds: grouped[2].taskIds,
+        title: "OA Received",
+        taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'OA Received').taskIds : [],
       },
       "column-3": {
         id: "column-3",
-        title: grouped[0].title,
-        taskIds: grouped[0].taskIds,
+        title: "Interview",
+        taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'Interview').taskIds : [],
       },
     },
     columnOrder: ["column-1", "column-2", "column-3"],
   };
+
+
+  const { data: board, err } = await supabase
+    .from('Users')
+    .update({ board: board_data })
+    .eq('user_id', 'req.user.id')
+
+  console.log(board, err);
 
   res.json({ board: board_data });
 };
