@@ -336,6 +336,32 @@ export const getCompanyList = async (req, res) => {
 };
 
 export const insertCompany = async (req, res) => {
-  console.log(req.body);
+  const value = Object.values(req.body);
+  value.shift();
+  let { data, error } = await supabase
+    .from("Users")
+    .select("tokens")
+    .eq("user_id", req.user.id);
+
+  oAuth2Client.setCredentials(data[0].tokens);
+  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+
+  let { data: sheet_id, er } = await supabase
+    .from("Users")
+    .select("sheet_id")
+    .eq("user_id", req.user.id);
+  let spreadsheet = await service.spreadsheets.get({
+    spreadsheetId: sheet_id[0].sheet_id,
+  });
+  
+  await service.spreadsheets.values.append({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: 'Sheet1', 
+    valueInputOption: "USER_ENTERED",
+    resource: {
+      values: [value],
+    },
+  });
+
 };
 export const insertOAData = async (req, res) => { };
