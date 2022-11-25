@@ -127,15 +127,15 @@ export const createSheet = async (req, res) => {
 
   // Add rows
   let values = [
-    ["Amazon", "Max", "20-10-2023", "", "Interview"],
+    ["Goldman Sachs", "Max", "", "", "Interview"],
     [
-      "Microsoft",
+      "Visa",
       "SDE2",
-      "20-10-2024",
-      "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
+      "",
+      "",
       "OA Received",
     ],
-    ["Oracle", "SDE2", "20-10-2024", "", "Applied"],
+    ["Citadel", "SDE2", "", "", "Applied"],
   ];
   let resource = {
     values,

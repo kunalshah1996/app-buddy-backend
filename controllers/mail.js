@@ -10,6 +10,8 @@ const oAuth2Client = new google.auth.OAuth2(
   process.env.CALLBACK_URL
 );
 
+ 
+
 export const getMail = async (req, res) => {
   const mails_list = [];
 
@@ -39,37 +41,43 @@ export const getMail = async (req, res) => {
 
   const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
-  // user_company.forEach(async (company) => {
+  user_company.forEach(async (company) => {
   var query =
-    "to:me newer_than:2d +" +
-    user_company[1] +
-    " +invited OR +" +
-    user_company[1] +
-    " +duration OR +" +
-    user_company[1] +
-    " +test OR +" +
-    user_company[1] +
+    // "to:me newer_than:2d +" 
+    "to:me +" 
+    + company +
+    " +invited OR +" 
+    + company +
+    " +duration OR +" 
+    + company +
+    " +test OR +" 
+    + company +
     " +assessment in:anywhere";
-  // console.log(query);
+  console.log(query);
 
   const id_res = await gmail.users.messages.list({
     userId: req.user.id,
     q: query,
+    maxResults: 1
   });
   const mailID = id_res.data.messages;
-  // console.log(mailID);
-
-  // mailID.forEach(async (element) => {
+  console.log(mailID);
+  if (!mailID || mailID.length === 0) {
+    console.log('No ids found.');
+    return;
+  }
+  mailID.forEach(async (element) => {
   const mail = await gmail.users.messages.get({
     userId: req.user.id,
-    id: String(mailID[0].id),
+    id: String(element.id),
   });
   const mailres = mail.data.payload.parts[0].body.data;
-
-  const mailBody = new Buffer.from(mailres, "base64").toString();
-  // console.log(mailBody);
+  var mailBody = Buffer.alloc(mailres, "base64").toString();
+  console.log(mailBody);
   mails_list.push(mailBody);
-  // });
-  res.send(mails_list);
-  // });
+  });
+
+  // res.send(mails_list);
+  console.log(mails_list);
+  });
 };
