@@ -56,7 +56,7 @@ export const getMail = async (req, res) => {
     + company +
     " +assessment in:anywhere";
 
-  console.log(query);
+  // console.log(query);
 
   const id_res = await gmail.users.messages.list({
     userId: req.user.id,
@@ -69,20 +69,25 @@ export const getMail = async (req, res) => {
     console.log('No ids found.');
     return;
   }
-  mailID.forEach(async (element) => {
-  const mail = gmail.users.messages.get({
+  const mail = await gmail.users.messages.get({
     userId: req.user.id,
-    id: String(element.id),
+    id: String(mailID[0].id),
   });
-  const mailres = JSON.stringify(mail.data.payload.parts[0].body.data);
-  // Base64.decode(mailres.replace(/-/g, '+').replace(/_/g, '/'));
+  const mailres = mail.data.payload.parts[0].body.data;
+  if(mailres === undefined){
+    console.log("UNDEFINED",String(mailID[0].id));
+    return
+    
+  }
+
+
   const mailBody = Buffer.from(mailres, "base64").toString('utf-8');
   console.log("Mail Body :",mailBody);
-  mails_list.append(mailBody);
-  });
+  // mails_list.append(mailBody);
+  
 
   // res.send(mails_list);
-  console.log("List",mails_list);
+  // console.log("List",mails_list);
   });
   
 
