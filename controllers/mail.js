@@ -1,8 +1,10 @@
 import { google } from "googleapis";
 import * as dotenv from "dotenv";
+import { Base64 } from "js-base64";
 dotenv.config();
 
 import { supabase } from "../supabaseClient.js";
+import { clouddebugger } from "googleapis/build/src/apis/clouddebugger/index.js";
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -53,6 +55,7 @@ export const getMail = async (req, res) => {
     " +test OR +" 
     + company +
     " +assessment in:anywhere";
+
   console.log(query);
 
   const id_res = await gmail.users.messages.list({
@@ -67,17 +70,21 @@ export const getMail = async (req, res) => {
     return;
   }
   mailID.forEach(async (element) => {
-  const mail = await gmail.users.messages.get({
+  const mail = gmail.users.messages.get({
     userId: req.user.id,
     id: String(element.id),
   });
-  const mailres = mail.data.payload.parts[0].body.data;
-  var mailBody = Buffer.alloc(mailres, "base64").toString();
-  console.log(mailBody);
-  mails_list.push(mailBody);
+  const mailres = JSON.stringify(mail.data.payload.parts[0].body.data);
+  // Base64.decode(mailres.replace(/-/g, '+').replace(/_/g, '/'));
+  const mailBody = Buffer.from(mailres, "base64").toString('utf-8');
+  console.log("Mail Body :",mailBody);
+  mails_list.append(mailBody);
   });
 
   // res.send(mails_list);
-  console.log(mails_list);
+  console.log("List",mails_list);
   });
+  
+
 };
+ 
