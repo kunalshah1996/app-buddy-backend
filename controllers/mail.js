@@ -34,14 +34,20 @@ export const getMail = async (req, res) => {
 
 
     const service = google.sheets({ version: "v4", auth: oAuth2Client });
+    // mailID.forEach(async (element) => {
+    // const mail = await gmail.users.messages.get({
+    //   userId: req.user.id,
+    //   id: String(mailID[0].id),
+    // });
+    // const mailres = mail.data.payload.parts[0].body.data;
 
-    const getCompanyList = await service.spreadsheets.values.get({
-      spreadsheetId: sheet_id[0].sheet_id,
-      range: "A:A",
-    });
-    let companyList = getCompanyList.data.values;
-    const user_company = [].concat(...companyList);
-    user_company.shift();
+    //   const getCompanyList = await service.spreadsheets.values.get({
+    //     spreadsheetId: sheet_id[0].sheet_id,
+    //     range: "A:A",
+    //   });
+    //   let companyList = getCompanyList.data.values;
+    //   const user_company = [].concat(...companyList);
+    //   user_company.shift();
 
 
     //read gmail

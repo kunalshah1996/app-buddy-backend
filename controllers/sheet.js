@@ -181,97 +181,116 @@ export const createSheet = async (req, res) => {
 
 export const getAllData = async (req, res) => {
   try {
-    let { data, error } = await supabase
+    let { data: board_fetch, e } = await supabase
       .from("Users")
-      .select("tokens")
+      .select("board")
       .eq("user_id", req.user.id);
     console.log(data[0].tokens);
-    oAuth2Client.setCredentials(data[0].tokens);
 
-    const service = google.sheets({ version: "v4", auth: oAuth2Client });
+    if (!board_fetch[0].board) {
+      let { data, error } = await supabase
+        .from("Users")
+        .select("tokens")
+        .eq("user_id", req.user.id);
 
-    let { data: sheet_id, er } = await supabase
-      .from("Users")
-      .select("sheet_id")
-      .eq("user_id", req.user.id);
+      oAuth2Client.setCredentials(data[0].tokens);
 
-    let spreadsheet = await service.spreadsheets.get({
-      spreadsheetId: sheet_id[0].sheet_id,
-    });
-    const getRows = await service.spreadsheets.values.get({
-      spreadsheetId: spreadsheet.data.spreadsheetId,
-      range: "Sheet1",
-    });
-    var objs = getRows.data.values.map((x, i) => ({
-      company_name: x[0],
-      position: x[1],
-      deadline: x[2],
-      oa_link: x[3],
-      status: x[4],
-      id: i + 1,
-    }));
-    objs.shift();
-    let tasks = {};
+      const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
-    objs.forEach((element) => {
-      var idKey = element.id;
-      if (!tasks[idKey]) {
-        tasks[idKey] = {};
-      }
-      tasks[idKey] = {
-        company_name: element.company_name,
-        position: element.position,
-        deadline: element.deadline,
-        oa_link: element.oa_link,
-        id: `${element.id}`,
-        status: element.status,
-      };
-    });
-    const task = Object.entries(tasks).map((entry) => entry[1]);
-    const transformArray = (arr = []) => {
-      const response = [];
-      const map = {};
-      let i, j, curr;
-      for (i = 0, j = arr.length; i < j; i++) {
-        curr = arr[i];
-        if (!(curr.status in map)) {
-          map[curr.status] = { title: curr.status, taskIds: [] };
-          response.push(map[curr.status]);
+      let { data: sheet_id, er } = await supabase
+        .from("Users")
+        .select("sheet_id")
+        .eq("user_id", req.user.id);
+
+      let spreadsheet = await service.spreadsheets.get({
+        spreadsheetId: sheet_id[0].sheet_id,
+      });
+      const getRows = await service.spreadsheets.values.get({
+        spreadsheetId: spreadsheet.data.spreadsheetId,
+        range: "Sheet1",
+      });
+      var objs = getRows.data.values.map((x, i) => ({
+        company_name: x[0],
+        position: x[1],
+        deadline: x[2],
+        oa_link: x[3],
+        status: x[4],
+        id: i + 1,
+      }));
+      objs.shift();
+      let tasks = {};
+
+      objs.forEach((element) => {
+        var idKey = `task-${element.id}`;
+        if (!tasks[idKey]) {
+          tasks[idKey] = {};
         }
-        map[curr.status].taskIds.push(curr.id);
-      }
-      return response;
-    };
-    let grouped = transformArray(task);
+        tasks[idKey] = {
+          company_name: element.company_name,
+          position: element.position,
+          deadline: element.deadline,
+          oa_link: element.oa_link,
+          id: `task-${element.id}`,
+          status: element.status,
+        };
+      });
+      const task = Object.entries(tasks).map((entry) => entry[1]);
+      const transformArray = (arr = []) => {
+        const res = [];
+        const map = {};
+        let i, j, curr;
+        for (i = 0, j = arr.length; i < j; i++) {
+          curr = arr[i];
+          if (!(curr.status in map)) {
+            map[curr.status] = { title: curr.status, taskIds: [] };
+            res.push(map[curr.status]);
+          }
+          map[curr.status].taskIds.push(curr.id);
+        }
+        return res;
+      };
+      let grouped = transformArray(task);
 
-    let board_data = {
-      tasks: tasks,
-      columns: {
-        "column-1": {
-          id: "column-1",
-          title: grouped[1].title,
-          taskIds: grouped[1].taskIds,
-        },
-        "column-2": {
-          id: "column-2",
-          title: grouped[2].title,
-          taskIds: grouped[2].taskIds,
-        },
-        "column-3": {
-          id: "column-3",
-          title: grouped[0].title,
-          taskIds: grouped[0].taskIds,
-        },
-      },
-      columnOrder: ["column-1", "column-2", "column-3"],
-    };
 
-    res.send({ board: board_data });
+      let board_data = {
+        "tasks": tasks ? tasks : [],
+        "columns": {
+          "column-1": {
+            id: "column-1",
+            title: "Applied",
+            taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'Applied').taskIds : [],
+          },
+          "column-2": {
+            id: "column-2",
+            title: "OA Received",
+            taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'OA Received').taskIds : [],
+          },
+          "column-3": {
+            id: "column-3",
+            title: "Interview",
+            taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'Interview').taskIds : [],
+          },
+        },
+        "columnOrder": ["column-1", "column-2", "column-3"],
+      };
 
+
+      const { data: board, err } = await supabase
+        .from('Users')
+        .update({ board: board_data })
+        .eq('user_id', req.user.id)
+
+      res.json({ board: board_data });
+
+    }
+    else {
+      res.json({ board: board_fetch[0].board });
+    }
   } catch (error) {
     console.log(error);
   }
-};
+}
+  ;
 
 export const getSheetId = async (req, res) => {
   try {
@@ -320,5 +339,97 @@ export const getCompanyList = async (req, res) => {
 
 };
 
-export const insertCompany = async (req, res) => { };
+export const insertCompany = async (req, res) => {
+  const value = Object.values(req.body);
+  value.shift();
+  let { data, error } = await supabase
+    .from("Users")
+    .select("tokens")
+    .eq("user_id", req.user.id);
+
+  oAuth2Client.setCredentials(data[0].tokens);
+  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+
+  let { data: sheet_id, er } = await supabase
+    .from("Users")
+    .select("sheet_id")
+    .eq("user_id", req.user.id);
+  let spreadsheet = await service.spreadsheets.get({
+    spreadsheetId: sheet_id[0].sheet_id,
+  });
+
+  await service.spreadsheets.values.append({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: 'Sheet1',
+    valueInputOption: "USER_ENTERED",
+    resource: {
+      values: [value],
+    },
+  });
+
+};
 export const insertOAData = async (req, res) => { };
+
+export const deleteCompany = async (req, res) => {
+  const value = Object.values(req.body);
+  value.shift();
+  let { data, error } = await supabase
+    .from("Users")
+    .select("tokens")
+    .eq("user_id", req.user.id);
+
+  oAuth2Client.setCredentials(data[0].tokens);
+  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+
+  let { data: sheet_id, er } = await supabase
+    .from("Users")
+    .select("sheet_id")
+    .eq("user_id", req.user.id);
+  let spreadsheet = await service.spreadsheets.get({
+    spreadsheetId: sheet_id[0].sheet_id,
+  });
+  const result = await service.spreadsheets.values.get({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: "Sheet1",
+  });
+
+  const toDelete = req.body;
+  delete toDelete.id;
+  let ranges = [];
+  var current = {
+    dimension: "ROWS",
+    startIndex: 0,
+    endIndex: 0
+  };
+
+  for (var i = 0; i < result.data.values.length; i++) {
+    if (result.data.values[i][0] == toDelete.company_name && result.data.values[i][1] == toDelete.position && result.data.values[i][2] == toDelete.deadline && result.data.values[i][3] == toDelete.oa_link && result.data.values[i][4] == toDelete.status) {
+      if (current.endIndex === i - 1 || current.startIndex === 0) {
+        if (current.startIndex === 0) {
+          current.startIndex = i;
+        }
+        current.endIndex = i + 1;
+      } else {
+        ranges.push(current);
+        current = {
+          dimension: "ROWS",
+          startIndex: i,
+          endIndex: i + 1
+        }
+      }
+    }
+
+  }
+  if (current.startIndex !== 0) {
+    ranges.push(current);
+  }
+  ranges.forEach(async (range) => {
+    var rowRange = 'Sheet1!A' + range.endIndex + ':E3'
+    await service.spreadsheets.values.clear({
+      spreadsheetId: spreadsheet.data.spreadsheetId,
+      range: rowRange,
+    });
+  })
+
+
+};
