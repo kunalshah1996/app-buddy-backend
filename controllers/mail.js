@@ -2,17 +2,15 @@ import { google } from "googleapis";
 import * as dotenv from "dotenv";
 import { Base64 } from "js-base64";
 dotenv.config();
-
+import fs from "fs";
 import { supabase } from "../supabaseClient.js";
-import { clouddebugger } from "googleapis/build/src/apis/clouddebugger/index.js";
+import { MailParser } from "mailparser";
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.CALLBACK_URL
 );
-
- 
 
 export const getMail = async (req, res) => {
   const mails_list = [];
@@ -39,8 +37,6 @@ export const getMail = async (req, res) => {
   const user_company = [].concat(...companyList);
   user_company.shift();
 
-  //read gmail
-
   const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
   user_company.forEach(async (company) => {
@@ -48,48 +44,68 @@ export const getMail = async (req, res) => {
     // "to:me newer_than:2d +" 
     "to:me +" 
     + company +
-    " +invited OR +" 
+    " +months OR +" 
     + company +
-    " +duration OR +" 
-    + company +
-    " +test OR +" 
+    " +days OR +" 
     + company +
     " +assessment in:anywhere";
-
-  // console.log(query);
+    // + company +
+    // " invite in:anywhere";
 
   const id_res = await gmail.users.messages.list({
     userId: req.user.id,
     q: query,
-    maxResults: 1
+    maxResults: 1,
   });
   const mailID = id_res.data.messages;
-  console.log(mailID);
   if (!mailID || mailID.length === 0) {
     console.log('No ids found.');
     return;
   }
+  const link = "https://mail.google.com/mail/u/"+req.user.email+"/#all/"+mailID[0].threadId.toString();
+  // console.log(link);
+
   const mail = await gmail.users.messages.get({
-    userId: req.user.id,
-    id: String(mailID[0].id),
-  });
-  const mailres = mail.data.payload.parts[0].body.data;
+      userId: req.user.id,
+      id: String(mailID[0].id),
+    });
+    // console.log(mail)
+  var mailres = mail.data.payload.parts[0].body.data;
+  // var htmlBody = Base64.decode(mailres.replace(/-/g, '+').replace(/_/g, '/'));  //alternative way to decode
   if(mailres === undefined){
     console.log("UNDEFINED",String(mailID[0].id));
-    return
-    
+    return;
+  }
+  const mailBody = Buffer.from(mailres, "base64").toString('ascii');
+
+  var pattern1 = /(\d+th|\d+nd|\d+rd|\d+]) * (?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)/gi;
+  var pattern2 = /(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?) * (\d+th|\d+nd|\d+rd|\d+])/gi;
+  var pattern3 = /(\d+) *\w* days|months|weeks/gi;
+
+  if(mailBody.match(pattern1) !== null){
+    console.log(company);
+    console.log(new Date(mailBody.match(pattern1)).toDateString());
+
+  }
+  else if(mailBody.match(pattern2)!== null){
+    console.log(company);
+    console.log(mailBody.match(pattern2));
+  }
+  else if(mailBody.match(pattern3)!== null){
+    console.log(company);
+    console.log(mailBody.match(pattern3));
+  }
+  else{
+      console.log(company);
+      console.log("7 days");
   }
 
-
-  const mailBody = Buffer.from(mailres, "base64").toString('utf-8');
-  console.log("Mail Body :",mailBody);
-  // mails_list.append(mailBody);
-  
-
-  // res.send(mails_list);
-  // console.log("List",mails_list);
+  fs.appendFile('file.log', mailBody, err => {
+    if (err) {
+      console.error(err);
+    }
   });
-  
-
+  // res.send(mails_list);
+  });
 };
  

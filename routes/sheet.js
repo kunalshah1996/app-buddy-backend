@@ -5,7 +5,7 @@ import {
   createSheet,
   getCompanyList,
   insertCompany,
-  insertOAData,
+  updateSheetData,
   getAllData,
   getSheetId,
 } from "../controllers/sheet.js";
@@ -15,6 +15,6 @@ router.get("/getSheetId", getSheetId);
 router.get("/getAllData", getAllData);
 router.get("/getCompanyList", getCompanyList);
 router.post("/insertCompany", insertCompany);
-router.post("/insertOAData", insertOAData);
+router.post("/updateSheetData", updateSheetData);
 
 export default router;

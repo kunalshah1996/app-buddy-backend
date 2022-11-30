@@ -29,6 +29,7 @@
     "express-session": "^1.17.3",
     "googleapis": "^109.0.1",
     "js-base64": "^3.7.3",
+    "mailparser": "^3.5.0",
     "node-gmail-api": "^1.0.1",
     "passport": "^0.6.0",
     "passport-google-oauth2": "^0.2.0",

@@ -325,4 +325,65 @@ export const getCompanyList = async (req, res) => {
 };
 
 export const insertCompany = async (req, res) => {};
-export const insertOAData = async (req, res) => {};
+export const updateSheetData = async (req, res) => {
+  let { data, error } = await supabase
+   .from("Users")
+   .select("tokens")
+   .eq("user_id", req.user.id);
+
+  oAuth2Client.setCredentials(data[0].tokens);
+  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+  let { data: sheet_id, er } = await supabase
+   .from("Users")
+   .select("sheet_id")
+   .eq("user_id", req.user.id);
+  const result = await service.spreadsheets.values.get({
+    spreadsheetId: spreadsheet.data.spreadsheetId,
+    range: "Sheet1",
+  });
+  let spreadsheet = await service.spreadsheets.get({  spreadsheetId: sheet_id[0].sheet_id, });
+  let ranges = [];
+  var current = {
+      dimension: "ROWS",
+      startIndex: 0,
+      endIndex: 0
+  };
+  const link = "http";
+  const name = "Visa";
+  const position = "Global Systems Analyst";
+
+  for(var i = 0; i < result.data.values.length; i++) {
+    if (result.data.values[i][0] == name && result.data.values[i][1] == position ) {
+        if (current.endIndex === i - 1 || current.startIndex === 0) {
+            if (current.startIndex === 0) {
+                current.startIndex = i;
+            }
+            current.endIndex = i + 1;
+        } else {
+            ranges.push(current);
+            current = {
+                dimension: "ROWS",
+                startIndex: i,
+                endIndex: i + 1
+            }
+        }
+    }
+
+}
+if (current.startIndex !== 0) {
+  ranges.push(current);
+}
+ranges.forEach(async (range) => {
+  var rowRange = 'Sheet1!C'+range.endIndex+':D'+range.endIndex;
+  var request = {
+      majorDimension: "ROWS",
+      values: [[link, new Date()]]
+  };
+  await service.spreadsheets.values.update(
+    request,
+    spreadsheet.data.spreadsheetId,
+    rowRange,
+    {valueInputOption: "USER_ENTERED"}
+  );
+})
+};
