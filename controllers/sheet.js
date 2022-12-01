@@ -419,18 +419,73 @@ export const deleteCompany = async (req, res) => {
   if (current.startIndex !== 0) {
     ranges.push(current);
   }
-  ranges.forEach(async (range) => {
-    var rowRange = 'Sheet1!A' + range.endIndex + ':E3'
+    var rowRange = 'Sheet1!A' + ranges[0].endIndex + ':E'+ ranges[0].endIndex;
     await service.spreadsheets.values.clear({
       spreadsheetId: spreadsheet.data.spreadsheetId,
       range: rowRange,
     });
-  })
 
 
 };
 
 export const updateStatus = async (req, res) => {
-  console.log(req.body);
+    console.log(req.body);
+
+  let { data, error } = await supabase
+    .from("Users")
+    .select("tokens")
+    .eq("user_id", req.user.id);
+
+  oAuth2Client.setCredentials(data[0].tokens);
+  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+
+  let { data: sheet_id, er } = await supabase
+    .from("Users")
+    .select("sheet_id")
+    .eq("user_id", req.user.id);
+  const result = await service.spreadsheets.values.get({
+    spreadsheetId: sheet_id[0].sheet_id,
+    range: "Sheet1",
+  });
+  let ranges = [];
+  var current = {
+    dimension: "ROWS",
+    startIndex: 0,
+    endIndex: 0
+  };
+  for (var i = 0; i < result.data.values.length; i++) {
+    if (result.data.values[i][0] == req.body.company_name && result.data.values[i][1] == req.body.position) {
+      if (current.endIndex === i - 1 || current.startIndex === 0) {
+        if (current.startIndex === 0) {
+          current.startIndex = i;
+        }
+        current.endIndex = i + 1;
+      } else {
+        ranges.push(current);
+        current = {
+          dimension: "ROWS",
+          startIndex: i,
+          endIndex: i + 1
+        }
+      }
+    }
+
+  }
+  if (current.startIndex !== 0) {
+    ranges.push(current);
+  }
+  console.log(ranges);
+    var rowRange = 'Sheet1!E' + ranges[0].endIndex;
+    await service.spreadsheets.values.update(
+      {
+        spreadsheetId : sheet_id[0].sheet_id,
+        range: rowRange,
+        valueInputOption:'USER_ENTERED',
+        resource: {
+          values: [[req.body.newStatus]],
+        }
+      }
+    );
+
 
 };
