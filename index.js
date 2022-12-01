@@ -40,7 +40,7 @@ app.use(
     secret: "KunalSamruddhi",
     resave: false,
     saveUninitialized: false,
-    // cookie: { sameSite: 'none', secure: true }    //uncomment for production
+    cookie: { sameSite: 'none', secure: true }    //uncomment for production
   })
 );
 app.use(passport.initialize());
