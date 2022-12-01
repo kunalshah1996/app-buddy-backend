@@ -34,6 +34,7 @@ app.use(function (req, res, next) {
 //Uncomment these changes for production
 
 app.use(express.json());
+app.use(cors({ origin: 'appbuddy-cron.kunalshah19969495.workers.dev', credentials: true }));
 app.use(cors({ origin: process.env.ORIGIN, credentials: true })); //"https://app-buddy.netlify.app"
 app.use(
   session({
