@@ -185,9 +185,10 @@ export const getAllData = async (req, res) => {
       .from("Users")
       .select("board")
       .eq("user_id", req.user.id);
-    console.log(data[0].tokens);
+
 
     if (!board_fetch[0].board) {
+      console.log("No board");
       let { data, error } = await supabase
         .from("Users")
         .select("tokens")
@@ -251,7 +252,7 @@ export const getAllData = async (req, res) => {
       };
       let grouped = transformArray(task);
 
-
+      console.log(grouped);
       let board_data = {
         "tasks": tasks ? tasks : [],
         "columns": {
@@ -273,6 +274,7 @@ export const getAllData = async (req, res) => {
         },
         "columnOrder": ["column-1", "column-2", "column-3"],
       };
+      console.log(board_data);
 
 
       const { data: board, err } = await supabase

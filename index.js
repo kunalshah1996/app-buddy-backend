@@ -18,10 +18,10 @@ app.disable("X-Powered-By");
 
 app.set("trust proxy", 1); // -------------- FIRST CHANGE ----------------
 
-app.use(cors({ origin: "https://app-buddy.netlify.app", credentials: true, methods: "GET, POST, PUT, DELETE" }));
+app.use(cors({ origin: process.env.ORIGIN, credentials: true, methods: "GET, POST, PUT, DELETE" }));
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Credentials", true);
-  res.header("Access-Control-Allow-Origin", "https://app-buddy.netlify.app");
+  res.header("Access-Control-Allow-Origin", process.env.ORIGIN);
   res.header("Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
