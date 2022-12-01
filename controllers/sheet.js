@@ -356,7 +356,7 @@ export const insertCompany = async (req, res) => {
 
   await service.spreadsheets.values.append({
     spreadsheetId: spreadsheet.data.spreadsheetId,
-    range: 'Sheet1', 
+    range: 'Sheet1',
     valueInputOption: "USER_ENTERED",
     resource: {
       values: [value],
@@ -388,44 +388,49 @@ export const deleteCompany = async (req, res) => {
     spreadsheetId: spreadsheet.data.spreadsheetId,
     range: "Sheet1",
   });
-  
-const toDelete = req.body;
-delete toDelete.id;
+
+  const toDelete = req.body;
+  delete toDelete.id;
   let ranges = [];
   var current = {
-      dimension: "ROWS",
-      startIndex: 0,
-      endIndex: 0
+    dimension: "ROWS",
+    startIndex: 0,
+    endIndex: 0
   };
 
-  for(var i = 0; i < result.data.values.length; i++) {
-      if (result.data.values[i][0] == toDelete.company_name && result.data.values[i][1] == toDelete.position && result.data.values[i][2] == toDelete.deadline && result.data.values[i][3] == toDelete.oa_link && result.data.values[i][4] == toDelete.status ) {
-          if (current.endIndex === i - 1 || current.startIndex === 0) {
-              if (current.startIndex === 0) {
-                  current.startIndex = i;
-              }
-              current.endIndex = i + 1;
-          } else {
-              ranges.push(current);
-              current = {
-                  dimension: "ROWS",
-                  startIndex: i,
-                  endIndex: i + 1
-              }
-          }
+  for (var i = 0; i < result.data.values.length; i++) {
+    if (result.data.values[i][0] == toDelete.company_name && result.data.values[i][1] == toDelete.position && result.data.values[i][2] == toDelete.deadline && result.data.values[i][3] == toDelete.oa_link && result.data.values[i][4] == toDelete.status) {
+      if (current.endIndex === i - 1 || current.startIndex === 0) {
+        if (current.startIndex === 0) {
+          current.startIndex = i;
+        }
+        current.endIndex = i + 1;
+      } else {
+        ranges.push(current);
+        current = {
+          dimension: "ROWS",
+          startIndex: i,
+          endIndex: i + 1
+        }
       }
+    }
 
   }
   if (current.startIndex !== 0) {
-      ranges.push(current);
+    ranges.push(current);
   }
   ranges.forEach(async (range) => {
-    var rowRange = 'Sheet1!A'+range.endIndex+':E3'
-      await service.spreadsheets.values.clear({
+    var rowRange = 'Sheet1!A' + range.endIndex + ':E3'
+    await service.spreadsheets.values.clear({
       spreadsheetId: spreadsheet.data.spreadsheetId,
       range: rowRange,
     });
   })
 
+
+};
+
+export const updateStatus = async (req, res) => {
+  console.log(req.body);
 
 };
