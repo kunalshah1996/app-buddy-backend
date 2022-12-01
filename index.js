@@ -97,6 +97,7 @@ passport.use(
 );
 
 app.get("/", (req, res) => {
+  console.log("Req registered");
   res.send("Hello World!");
 });
 
