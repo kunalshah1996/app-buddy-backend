@@ -2,7 +2,7 @@ import cron from 'node-cron';
 
 import { supabase } from './supabaseClient.js';
 
-cron.schedule('5 5 * * *', function () {
+cron.schedule('5 17 * * *', function () {
     console.log('running a task every minute');
 });
 
