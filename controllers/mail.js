@@ -4,7 +4,6 @@ import { Base64 } from "js-base64";
 dotenv.config();
 import fs from "fs";
 import { supabase } from "../supabaseClient.js";
-import { MailParser } from "mailparser";
 
 const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -31,10 +30,7 @@ export const getMail = async (req, res) => {
     spreadsheetId: sheet_id[0].sheet_id,
     range: "Sheet1",
   });
-  // let spreadsheet = await service.spreadsheets.get({  spreadsheetId: sheet_id[0].sheet_id, });
-  // let companyList = getCompanyList.data.values;
-  // const user_company = [].concat(...companyList);
-  // user_company.shift();
+
   let user_company = getCompanyList.data.values;
   user_company.shift();
 
@@ -116,7 +112,6 @@ if (current.startIndex !== 0) {
 
   if(mailBody.match(pattern1) !== null){
     var rawDate = mailBody.match(pattern1);
-    var pattern = /[a-z]{2}/;
     var dateobj =  rawDate[0].replace(/(\d+)(st|nd|rd|th)/g, "$1");
     var date = new Date(dateobj);
     date.setFullYear(2022)
@@ -135,7 +130,6 @@ if (current.startIndex !== 0) {
   }
   else if(mailBody.match(pattern2)!== null){
     var rawDate = mailBody.match(pattern2);
-    var pattern = /[a-z]{2}/;
     var dateobj =  rawDate[0].replace(/(\d+)(st|nd|rd|th)/g, "$1");
     var date = new Date(dateobj);
     date.setFullYear(2022)
