@@ -29,10 +29,13 @@ export const getMail = async (req, res) => {
 
   const getCompanyList = await service.spreadsheets.values.get({
     spreadsheetId: sheet_id[0].sheet_id,
-    range: "A:A",
+    range: "Sheet1",
   });
-  let companyList = getCompanyList.data.values;
-  const user_company = [].concat(...companyList);
+  // let spreadsheet = await service.spreadsheets.get({  spreadsheetId: sheet_id[0].sheet_id, });
+  // let companyList = getCompanyList.data.values;
+  // const user_company = [].concat(...companyList);
+  // user_company.shift();
+  let user_company = getCompanyList.data.values;
   user_company.shift();
 
   const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
@@ -41,11 +44,11 @@ export const getMail = async (req, res) => {
   var query =
     // "to:me newer_than:2d +" 
     "to:me +" 
-    + company +
+    + company[0] +
     " +months OR +" 
-    + company +
+    + company[0] +
     " +days OR +" 
-    + company +
+    + company[0] +
     " +assessment in:anywhere";
     // + company +
     // " invite in:anywhere";
@@ -61,13 +64,11 @@ export const getMail = async (req, res) => {
     return;
   }
   const link = "https://mail.google.com/mail/u/"+req.user.email+"/#all/"+mailID[0].threadId.toString();
-  // console.log(link);
 
   const mail = await gmail.users.messages.get({
       userId: req.user.id,
       id: String(mailID[0].id),
     });
-    // console.log(mail)
   var mailres = mail.data.payload.parts[0].body.data;
   // var htmlBody = Base64.decode(mailres.replace(/-/g, '+').replace(/_/g, '/'));  //alternative way to decode
   if(mailres === undefined){
@@ -75,12 +76,43 @@ export const getMail = async (req, res) => {
     return;
   }
   const mailBody = Buffer.from(mailres, "base64").toString('ascii');
+  const result = await service.spreadsheets.values.get({
+        spreadsheetId: sheet_id[0].sheet_id,
+        range: "Sheet1",
+      });
+  let ranges = [];
+  var current = {
+      dimension: "ROWS",
+      startIndex: 0,
+      endIndex: 0
+  };
+
+  for(var i = 0; i < result.data.values.length; i++) {
+    if (result.data.values[i][0] == company[0] && result.data.values[i][1] == company[1] ) {
+        if (current.endIndex === i - 1 || current.startIndex === 0) {
+            if (current.startIndex === 0) {
+                current.startIndex = i;
+            }
+            current.endIndex = i + 1;
+        } else {
+            ranges.push(current);
+            current = {
+                dimension: "ROWS",
+                startIndex: i,
+                endIndex: i + 1
+            }
+        }
+    }
+
+}
+if (current.startIndex !== 0) {
+  ranges.push(current);
+}
 
   var pattern1 = /(\d+th|\d+nd|\d+rd|\d+]) * (?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)/gi;
   var pattern2 = /(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?) * (\d+th|\d+nd|\d+rd|\d+])/gi;
   var pattern3 = /(\d+) *\w* days|months|weeks/gi;
   var pattern4 = /(0\d{1}|1[0-2])([/+-])([0-2]\d{1}|3[0-1])([/+-])(19|20)(\d{2})/g
-
 
   if(mailBody.match(pattern1) !== null){
     var rawDate = mailBody.match(pattern1);
@@ -88,8 +120,17 @@ export const getMail = async (req, res) => {
     var dateobj =  rawDate[0].replace(/(\d+)(st|nd|rd|th)/g, "$1");
     var date = new Date(dateobj);
     date.setFullYear(2022)
-    console.log(company)
-    console.log(date);
+      var rowRange = 'Sheet1!C'+ranges[0].endIndex+':E'+ranges[0].endIndex;
+      await service.spreadsheets.values.update(
+        {
+          spreadsheetId : sheet_id[0].sheet_id,
+          range: rowRange,
+          valueInputOption:'USER_ENTERED',
+          resource: {
+            values: [[date, link , "OA Received"]],
+          }
+        }
+      );
 
   }
   else if(mailBody.match(pattern2)!== null){
@@ -98,9 +139,17 @@ export const getMail = async (req, res) => {
     var dateobj =  rawDate[0].replace(/(\d+)(st|nd|rd|th)/g, "$1");
     var date = new Date(dateobj);
     date.setFullYear(2022)
-    console.log(company)
-    console.log(date);
-
+      var rowRange = 'Sheet1!C'+ranges[0].endIndex+':E'+ranges[0].endIndex;
+      await service.spreadsheets.values.update(
+        {
+          spreadsheetId : sheet_id[0].sheet_id,
+          range: rowRange,
+          valueInputOption:'USER_ENTERED',
+          resource: {
+            values: [[date, link , "OA Received"]],
+          }
+        }
+      );
   }
   else if(mailBody.match(pattern3)!== null){
     var rawDate = mailBody.match(pattern3);
@@ -108,25 +157,54 @@ export const getMail = async (req, res) => {
     var days =  parseInt(rawDate[0].match(pattern));
     var date = new Date()
     date.setDate(date.getDate() + days);
-
+      var rowRange = 'Sheet1!C'+ranges[0].endIndex+':E'+ranges[0].endIndex;
+      await service.spreadsheets.values.update(
+        {
+          spreadsheetId : sheet_id[0].sheet_id,
+          range: rowRange,
+          valueInputOption:'USER_ENTERED',
+          resource: {
+            values: [[date, link , "OA Received"]],
+          }
+        }
+      );
   }
   else if(mailBody.match(pattern4)!== null){
     var rawDate = mailBody.match(pattern4);
     var date =  Date(rawDate);
+      var rowRange = 'Sheet1!C'+ranges[0].endIndex+':E'+ranges[0].endIndex;
+      await service.spreadsheets.values.update(
+        {
+          spreadsheetId : sheet_id[0].sheet_id,
+          range: rowRange,
+          valueInputOption:'USER_ENTERED',
+          resource: {
+            values: [[date, link , "OA Received"]],
+          }
+        }
+      );
   }
   else{
     var date = new Date()
     date.setDate(date.getDate() + 7);
-    // date = date.toLocaleDateString();
-
-
+      var rowRange = 'Sheet1!C'+ranges[0].endIndex+':E'+ranges[0].endIndex;
+      await service.spreadsheets.values.update(
+        {
+          spreadsheetId : sheet_id[0].sheet_id,
+          range: rowRange,
+          valueInputOption:'USER_ENTERED',
+          resource: {
+            values: [[date, link , "OA Received"]],
+          }
+        }
+      );
   }
 
-  fs.appendFile('file.log', mailBody, err => {
-    if (err) {
-      console.error(err);
-    }
-  });
+  // fs.appendFile('file.log', mailBody, err => {
+  //   if (err) {
+  //     console.error(err);
+  //   }
+  // });
   // res.send(mails_list);
   });
 
