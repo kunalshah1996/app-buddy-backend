@@ -374,10 +374,10 @@ if (current.startIndex !== 0) {
   ranges.push(current);
 }
 ranges.forEach(async (range) => {
-  var rowRange = 'Sheet1!C'+range.endIndex+':D'+range.endIndex;
+  var rowRange = 'Sheet1!C'+range.endIndex+':E'+range.endIndex;
   var request = {
       majorDimension: "ROWS",
-      values: [[link, new Date()]]
+      values: [[link, new Date(), "OA Received"]]
   };
   await service.spreadsheets.values.update(
     request,

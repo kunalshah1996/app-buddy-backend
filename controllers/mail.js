@@ -13,8 +13,6 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 
 export const getMail = async (req, res) => {
-  const mails_list = [];
-
   let { data, error } = await supabase
     .from("Users")
     .select("tokens")
@@ -81,23 +79,47 @@ export const getMail = async (req, res) => {
   var pattern1 = /(\d+th|\d+nd|\d+rd|\d+]) * (?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)/gi;
   var pattern2 = /(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?) * (\d+th|\d+nd|\d+rd|\d+])/gi;
   var pattern3 = /(\d+) *\w* days|months|weeks/gi;
+  var pattern4 = /(0\d{1}|1[0-2])([/+-])([0-2]\d{1}|3[0-1])([/+-])(19|20)(\d{2})/g
+
 
   if(mailBody.match(pattern1) !== null){
-    console.log(company);
-    console.log(new Date(mailBody.match(pattern1)).toDateString());
+    var rawDate = mailBody.match(pattern1);
+    var pattern = /[a-z]{2}/;
+    var dateobj =  rawDate[0].replace(/(\d+)(st|nd|rd|th)/g, "$1");
+    var date = new Date(dateobj);
+    date.setFullYear(2022)
+    console.log(company)
+    console.log(date);
 
   }
   else if(mailBody.match(pattern2)!== null){
-    console.log(company);
-    console.log(mailBody.match(pattern2));
+    var rawDate = mailBody.match(pattern2);
+    var pattern = /[a-z]{2}/;
+    var dateobj =  rawDate[0].replace(/(\d+)(st|nd|rd|th)/g, "$1");
+    var date = new Date(dateobj);
+    date.setFullYear(2022)
+    console.log(company)
+    console.log(date);
+
   }
   else if(mailBody.match(pattern3)!== null){
-    console.log(company);
-    console.log(mailBody.match(pattern3));
+    var rawDate = mailBody.match(pattern3);
+    var pattern = /[0-9]+/g;
+    var days =  parseInt(rawDate[0].match(pattern));
+    var date = new Date()
+    date.setDate(date.getDate() + days);
+
+  }
+  else if(mailBody.match(pattern4)!== null){
+    var rawDate = mailBody.match(pattern4);
+    var date =  Date(rawDate);
   }
   else{
-      console.log(company);
-      console.log("7 days");
+    var date = new Date()
+    date.setDate(date.getDate() + 7);
+    // date = date.toLocaleDateString();
+
+
   }
 
   fs.appendFile('file.log', mailBody, err => {
@@ -107,5 +129,6 @@ export const getMail = async (req, res) => {
   });
   // res.send(mails_list);
   });
+
 };
  
