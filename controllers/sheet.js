@@ -13,170 +13,165 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 
 export const createSheet = async (req, res) => {
+  try {
+    let { data, error } = await supabase
+      .from("Users")
+      .select("tokens")
+      .eq("user_id", req.user.id);
 
-  oAuth2Client.setCredentials(data[0].tokens);
+    oAuth2Client.setCredentials(data[0].tokens);
 
-  const service = google.sheets({ version: "v4", auth: oAuth2Client });
+    const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
-  let { data: sheet_id, er } = await supabase
-    .from("Users")
-    .select("sheet_id")
-    .eq("user_id", req.user.id);
+    let { data: sheet_id, er } = await supabase
+      .from("Users")
+      .select("sheet_id")
+      .eq("user_id", req.user.id);
 
-  let spreadsheet;
-  if (!sheet_id[0].sheet_id) {
-    spreadsheet = await service.spreadsheets.create({
-      resource: {
-        properties: { title: "Test Sheet" },
+    let spreadsheet;
+    if (!sheet_id[0].sheet_id) {
+      spreadsheet = await service.spreadsheets.create({
+        resource: {
+          properties: { title: "Test Sheet" },
 
-        sheets: [
-          {
-            data: [
-              {
-                startRow: 0,
-                startColumn: 0,
-                rowData: [
-                  {
-                    values: [
-                      {
-                        userEnteredValue: {
-                          stringValue: "Company Name",
+          sheets: [
+            {
+              data: [
+                {
+                  startRow: 0,
+                  startColumn: 0,
+                  rowData: [
+                    {
+                      values: [
+                        {
+                          userEnteredValue: {
+                            stringValue: "Company Name",
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                startRow: 0,
-                startColumn: 1,
-                rowData: [
-                  {
-                    values: [
-                      {
-                        userEnteredValue: {
-                          stringValue: "Position",
+                      ],
+                    },
+                  ],
+                },
+                {
+                  startRow: 0,
+                  startColumn: 1,
+                  rowData: [
+                    {
+                      values: [
+                        {
+                          userEnteredValue: {
+                            stringValue: "Position",
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                startRow: 0,
-                startColumn: 2,
-                rowData: [
-                  {
-                    values: [
-                      {
-                        userEnteredValue: {
-                          stringValue: "Deadline",
+                      ],
+                    },
+                  ],
+                },
+                {
+                  startRow: 0,
+                  startColumn: 2,
+                  rowData: [
+                    {
+                      values: [
+                        {
+                          userEnteredValue: {
+                            stringValue: "Deadline",
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                startRow: 0,
-                startColumn: 3,
-                rowData: [
-                  {
-                    values: [
-                      {
-                        userEnteredValue: {
-                          stringValue: "OA Link",
+                      ],
+                    },
+                  ],
+                },
+                {
+                  startRow: 0,
+                  startColumn: 3,
+                  rowData: [
+                    {
+                      values: [
+                        {
+                          userEnteredValue: {
+                            stringValue: "OA Link",
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                startRow: 0,
-                startColumn: 4,
-                rowData: [
-                  {
-                    values: [
-                      {
-                        userEnteredValue: {
-                          stringValue: "Status",
+                      ],
+                    },
+                  ],
+                },
+                {
+                  startRow: 0,
+                  startColumn: 4,
+                  rowData: [
+                    {
+                      values: [
+                        {
+                          userEnteredValue: {
+                            stringValue: "Status",
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      });
+    } else {
+      spreadsheet = await service.spreadsheets.get({
+        spreadsheetId: sheet_id[0].sheet_id,
+      });
+    }
+
+    // Add rows
+    let values = [
+      ["Roblox", "Software EngineeringMax", "", "", "Applied"],
+      ["ZipRecruiter", "Software EngineeringMax", "", "", "Applied"],
+      ["Visa", "Software Engineering", "", "", "Applied",],
+      ["Citadel", "Software Engineering", "", "", "Applied"],
+      ["Samsara", "Software Engineering", "", "", "Applied",],
+      ["Ebay", "Software Engineering", "", "", "Applied",]
+    ];
+    let resource = {
+      values,
+    };
+
+    service.spreadsheets.values.append(
+      {
+        spreadsheetId: spreadsheet.data.spreadsheetId,
+        range: "Sheet1!A1:E1",
+        valueInputOption: "RAW",
+        resource: resource,
       },
-    });
-  } else {
-    spreadsheet = await service.spreadsheets.get({
-      spreadsheetId: sheet_id[0].sheet_id,
-    });
+      (err, result) => {
+        if (err) {
+          // Handle error.
+          console.log(err);
+        }
+      }
+    );
+    // const getRows = await service.spreadsheets.values.get({
+    //   spreadsheetId: spreadsheet.data.spreadsheetId,
+    //   range: "A:A",
+    // });
+    // console.log(getRows.data.values);
+
+    // res.status(200).send(spreadsheet.data.spreadsheetId);
+
+    // //Read rows
+    // console.log(req.user.id);
+
+    res.send(spreadsheet.data.spreadsheetId);
+
+    const { sheet_data, err } = await supabase
+      .from("Users")
+      .update({ sheet_id: spreadsheet.data.spreadsheetId })
+      .eq("user_id", req.user.id);
+
+  } catch (error) {
+    console.log(error);
   }
 
-  // Add rows
-  let values = [
-    [
-      "Amazon",
-      "Max",
-      "20-10-2023",
-      "",
-      "Interview",
-    ],
-    [
-      "Microsoft",
-      "SDE2",
-      "20-10-2024",
-      "https://stackoverflow.com/questions/57618668/how-to-use-spreadsheets-values-batchupdate-with-google-cloud-functions-and-nodej",
-      "OA Received",
-    ],
-    [
-      "Oracle",
-      "SDE2",
-      "20-10-2024",
-      "",
-      "Applied",
-    ],
-  ];
-  let resource = {
-    values,
-  };
-
-  service.spreadsheets.values.append(
-    {
-      spreadsheetId: spreadsheet.data.spreadsheetId,
-      range: "Sheet1!A1:E1",
-      valueInputOption: "RAW",
-      resource: resource,
-    },
-    (err, result) => {
-      if (err) {
-        // Handle error.
-        console.log(err);
-      }
-    }
-  );
-  // const getRows = await service.spreadsheets.values.get({
-  //   spreadsheetId: spreadsheet.data.spreadsheetId,
-  //   range: "A:A",
-  // });
-  // console.log(getRows.data.values);
-
-  // res.status(200).send(spreadsheet.data.spreadsheetId);
-
-  // //Read rows
-  // console.log(req.user.id);
-
-  res.send(spreadsheet.data.spreadsheetId);
-
-  const { sheet_data, err } = await supabase
-    .from("Users")
-    .update({ sheet_id: spreadsheet.data.spreadsheetId })
-    .eq("user_id", req.user.id);
 };
 
 export const getAllData = async (req, res) => {
@@ -231,21 +226,23 @@ export const getAllData = async (req, res) => {
     });
     const task = Object.entries(tasks).map((entry) => entry[1]);
     const transformArray = (arr = []) => {
-      const res = [];
+      const response = [];
       const map = {};
       let i, j, curr;
       for (i = 0, j = arr.length; i < j; i++) {
         curr = arr[i];
         if (!(curr.status in map)) {
           map[curr.status] = { title: curr.status, taskIds: [] };
-          res.push(map[curr.status]);
+          response.push(map[curr.status]);
         }
         map[curr.status].taskIds.push(curr.id);
       }
-      return res;
+      return response;
     };
     let grouped = transformArray(task);
 
+    console.log("grouped", grouped);
+    console.log(grouped.find(x => x.title === 'OA Received'));
 
     let board_data = {
       "tasks": tasks ? tasks : [],
@@ -253,17 +250,17 @@ export const getAllData = async (req, res) => {
         "column-1": {
           id: "column-1",
           title: "Applied",
-          taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'Applied').taskIds : [],
+          taskIds: grouped.find(x => x.title === 'Applied') ? grouped.find(x => x.title === 'Applied').taskIds : [],
         },
         "column-2": {
           id: "column-2",
           title: "OA Received",
-          taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'OA Received').taskIds : [],
+          taskIds: grouped.find(x => x.title === 'OA Received') ? grouped.find(x => x.title === 'OA Received').taskIds : [],
         },
         "column-3": {
           id: "column-3",
           title: "Interview",
-          taskIds: grouped.length > 1 ? grouped.find(x => x.title === 'Interview').taskIds : [],
+          taskIds: grouped.find(x => x.title === 'Interview') ? grouped.find(x => x.title === 'Interview').taskIds : [],
         },
       },
       "columnOrder": ["column-1", "column-2", "column-3"],
@@ -274,6 +271,8 @@ export const getAllData = async (req, res) => {
       .from('Users')
       .update({ board: board_data })
       .eq('user_id', req.user.id)
+
+    // console.log(board_data);
 
     res.json({ board: board_data });
 
