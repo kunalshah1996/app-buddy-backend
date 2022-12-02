@@ -129,6 +129,12 @@ app.use("/mail", mailRoutes);
 
 cron.schedule('*/35 */1 * * *', async () => {
   try {
+    const oAuth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.CALLBACK_URL
+    );
+
     console.log("scheduled started");
     let { data, error } = await supabase
       .from("Users")
