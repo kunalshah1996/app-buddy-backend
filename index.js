@@ -127,7 +127,7 @@ app.use("/user", userRoutes);
 
 app.use("/mail", mailRoutes);
 
-cron.schedule('*/5 */1 * * *', async () => {
+cron.schedule('*/35 */1 * * *', async () => {
   try {
     console.log("scheduled started");
     let { data, error } = await supabase
