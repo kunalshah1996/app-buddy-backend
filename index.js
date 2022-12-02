@@ -129,7 +129,7 @@ app.use("/user", userRoutes);
 
 app.use("/mail", mailRoutes);
 
-cron.schedule('*/35 */1 * * *', async () => {
+cron.schedule('5,35 * * * *', async () => {
   try {
     const oAuth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
