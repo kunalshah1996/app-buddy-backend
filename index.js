@@ -97,6 +97,9 @@ app.get(
       "profile",
       "https://mail.google.com/",
       "https://www.googleapis.com/auth/spreadsheets",
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/calendar",
+      "https://www.googleapis.com/auth/calendar.events", 
     ],
     accessType: "offline",
     prompt: 'consent',
@@ -243,6 +246,11 @@ cron.schedule('5 12 * * *', async () => {
           var pattern3 = /(\d+) *\w* days|months|weeks/gi;
           var pattern4 = /(0\d{1}|1[0-2])([/+-])([0-2]\d{1}|3[0-1])([/+-])(19|20)(\d{2})/g
 
+          const calendar = google.calendar({
+            version: 'v3',
+            auth: oAuth2Client
+        })
+
           if (mailBody.match(pattern1) !== null) {
             var rawDate = mailBody.match(pattern1);
             var dateobj = rawDate[0].replace(/(\d+)(st|nd|rd|th)/g, "$1");
@@ -260,7 +268,89 @@ cron.schedule('5 12 * * *', async () => {
               }
             );
 
+            let startDate = new Date(date.valueOf())
+      startDate.setHours(0,0,0);
+      let endDate =  new Date(date.valueOf())
+      endDate.setHours(23,59,59);
+      function waitFor(milliseconds) {
+        return new Promise((resolve) => setTimeout(resolve, milliseconds));
+      }
+      
+     
+      function retry(promise, onRetry, maxRetries) {
+        // Notice that we declare an inner function here
+        // so we can encapsulate the retries and don't expose
+        // it to the caller. This is also a recursive function
+        async function retryWithBackoff(retries) {
+          try {
+            // Make sure we don't wait on the first attempt
+            if (retries > 0) {
+              // Here is where the magic happens.
+              // on every retry, we exponentially increase the time to wait.
+              // Here is how it looks for a `maxRetries` = 4
+              // (2 ** 1) * 100 = 200 ms
+              // (2 ** 2) * 100 = 400 ms
+              // (2 ** 3) * 100 = 800 ms
+              const timeToWait = 2 ** retries * 400;
+              console.log(`waiting for ${timeToWait}ms...`);
+              await waitFor(timeToWait);
+            }
+            return await promise();
+          } catch (e) {
+            // only retry if we didn't reach the limit
+            // otherwise, let the caller handle the error
+            if (retries < maxRetries) {
+              onRetry();
+              return retryWithBackoff(retries + 1);
+            } else {
+              console.warn("Max retries reached. Bubbling the error up");
+              throw e;
+            }
           }
+        }
+      
+        return retryWithBackoff(0);
+      }
+
+      
+
+      try{
+        let calendar_call= calendar.events.insert({
+          auth: oAuth2Client,
+          calendarId: 'primary',
+          sendUpdates: 'all',
+          resource: {
+            'summary': "Online Assessment deadline for "+company[0],
+            'description': company[0]+" Online Assessment link - "+link,
+            'start': { 
+              'dateTime': startDate,
+              'timeZone': '(GMT-6:00) Central Time - Chicago' },      
+            'end': {  
+              'dateTime': endDate,
+              'timeZone': '(GMT-6:00) Central Time - Chicago' },    
+            'reminders': {
+                'useDefault': false,
+                'overrides': [
+                  {'method': 'popup', 'minutes': 24 * 60},
+                ]
+              }
+
+          }
+        });
+
+        await retry(
+          calendar_call,
+          () => {
+            console.log("onRetry called...");
+          },
+          6
+        );
+  
+       }
+        catch(err){
+          console.log(`Insert Event ${err}`);
+        }   
+  }
           else if (mailBody.match(pattern2) !== null) {
             var rawDate = mailBody.match(pattern2);
             var dateobj = rawDate[0].replace(/(\d+)(st|nd|rd|th)/g, "$1");
@@ -277,7 +367,90 @@ cron.schedule('5 12 * * *', async () => {
                 }
               }
             );
+
+            let startDate = new Date(date.valueOf())
+      startDate.setHours(0,0,0);
+      let endDate =  new Date(date.valueOf())
+      endDate.setHours(23,59,59);
+      function waitFor(milliseconds) {
+        return new Promise((resolve) => setTimeout(resolve, milliseconds));
+      }
+      
+     
+      function retry(promise, onRetry, maxRetries) {
+        // Notice that we declare an inner function here
+        // so we can encapsulate the retries and don't expose
+        // it to the caller. This is also a recursive function
+        async function retryWithBackoff(retries) {
+          try {
+            // Make sure we don't wait on the first attempt
+            if (retries > 0) {
+              // Here is where the magic happens.
+              // on every retry, we exponentially increase the time to wait.
+              // Here is how it looks for a `maxRetries` = 4
+              // (2 ** 1) * 100 = 200 ms
+              // (2 ** 2) * 100 = 400 ms
+              // (2 ** 3) * 100 = 800 ms
+              const timeToWait = 2 ** retries * 400;
+              console.log(`waiting for ${timeToWait}ms...`);
+              await waitFor(timeToWait);
+            }
+            return await promise();
+          } catch (e) {
+            // only retry if we didn't reach the limit
+            // otherwise, let the caller handle the error
+            if (retries < maxRetries) {
+              onRetry();
+              return retryWithBackoff(retries + 1);
+            } else {
+              console.warn("Max retries reached. Bubbling the error up");
+              throw e;
+            }
           }
+        }
+      
+        return retryWithBackoff(0);
+      }
+
+      
+
+      try{
+        let calendar_call= calendar.events.insert({
+          auth: oAuth2Client,
+          calendarId: 'primary',
+          sendUpdates: 'all',
+          resource: {
+            'summary': "Online Assessment deadline for "+company[0],
+            'description': company[0]+" Online Assessment link - "+link,
+            'start': { 
+              'dateTime': startDate,
+              'timeZone': '(GMT-6:00) Central Time - Chicago' },      
+            'end': {  
+              'dateTime': endDate,
+              'timeZone': '(GMT-6:00) Central Time - Chicago' },    
+            'reminders': {
+                'useDefault': false,
+                'overrides': [
+                  {'method': 'popup', 'minutes': 24 * 60},
+                ]
+              }
+
+          }
+        });
+
+        await retry(
+          calendar_call,
+          () => {
+            console.log("onRetry called...");
+          },
+          6
+        );
+  
+       }
+        catch(err){
+          console.log(`Insert Event ${err}`);
+        }   
+  }
           else if (mailBody.match(pattern3) !== null) {
             var rawDate = mailBody.match(pattern3);
             var pattern = /[0-9]+/g;
@@ -295,7 +468,91 @@ cron.schedule('5 12 * * *', async () => {
                 }
               }
             );
-          }
+
+
+            let startDate = new Date(date.valueOf())
+            startDate.setHours(0,0,0);
+            let endDate =  new Date(date.valueOf())
+            endDate.setHours(23,59,59);
+            function waitFor(milliseconds) {
+              return new Promise((resolve) => setTimeout(resolve, milliseconds));
+            }
+            
+           
+            function retry(promise, onRetry, maxRetries) {
+              // Notice that we declare an inner function here
+              // so we can encapsulate the retries and don't expose
+              // it to the caller. This is also a recursive function
+              async function retryWithBackoff(retries) {
+                try {
+                  // Make sure we don't wait on the first attempt
+                  if (retries > 0) {
+                    // Here is where the magic happens.
+                    // on every retry, we exponentially increase the time to wait.
+                    // Here is how it looks for a `maxRetries` = 4
+                    // (2 ** 1) * 100 = 200 ms
+                    // (2 ** 2) * 100 = 400 ms
+                    // (2 ** 3) * 100 = 800 ms
+                    const timeToWait = 2 ** retries * 400;
+                    console.log(`waiting for ${timeToWait}ms...`);
+                    await waitFor(timeToWait);
+                  }
+                  return await promise();
+                } catch (e) {
+                  // only retry if we didn't reach the limit
+                  // otherwise, let the caller handle the error
+                  if (retries < maxRetries) {
+                    onRetry();
+                    return retryWithBackoff(retries + 1);
+                  } else {
+                    console.warn("Max retries reached. Bubbling the error up");
+                    throw e;
+                  }
+                }
+              }
+            
+              return retryWithBackoff(0);
+            }
+      
+            
+      
+            try{
+              let calendar_call= calendar.events.insert({
+                auth: oAuth2Client,
+                calendarId: 'primary',
+                sendUpdates: 'all',
+                resource: {
+                  'summary': "Online Assessment deadline for "+company[0],
+                  'description': company[0]+" Online Assessment link - "+link,
+                  'start': { 
+                    'dateTime': startDate,
+                    'timeZone': '(GMT-6:00) Central Time - Chicago' },      
+                  'end': {  
+                    'dateTime': endDate,
+                    'timeZone': '(GMT-6:00) Central Time - Chicago' },    
+                  'reminders': {
+                      'useDefault': false,
+                      'overrides': [
+                        {'method': 'popup', 'minutes': 24 * 60},
+                      ]
+                    }
+      
+                }
+              });
+      
+              await retry(
+                calendar_call,
+                () => {
+                  console.log("onRetry called...");
+                },
+                6
+              );
+        
+             }
+              catch(err){
+                console.log(`Insert Event ${err}`);
+              }   
+        }
           else if (mailBody.match(pattern4) !== null) {
             var rawDate = mailBody.match(pattern4);
             var date = Date(rawDate);
@@ -310,7 +567,89 @@ cron.schedule('5 12 * * *', async () => {
                 }
               }
             );
-          }
+            let startDate = new Date(date.valueOf())
+            startDate.setHours(0,0,0);
+            let endDate =  new Date(date.valueOf())
+            endDate.setHours(23,59,59);
+            function waitFor(milliseconds) {
+              return new Promise((resolve) => setTimeout(resolve, milliseconds));
+            }
+            
+           
+            function retry(promise, onRetry, maxRetries) {
+              // Notice that we declare an inner function here
+              // so we can encapsulate the retries and don't expose
+              // it to the caller. This is also a recursive function
+              async function retryWithBackoff(retries) {
+                try {
+                  // Make sure we don't wait on the first attempt
+                  if (retries > 0) {
+                    // Here is where the magic happens.
+                    // on every retry, we exponentially increase the time to wait.
+                    // Here is how it looks for a `maxRetries` = 4
+                    // (2 ** 1) * 100 = 200 ms
+                    // (2 ** 2) * 100 = 400 ms
+                    // (2 ** 3) * 100 = 800 ms
+                    const timeToWait = 2 ** retries * 400;
+                    console.log(`waiting for ${timeToWait}ms...`);
+                    await waitFor(timeToWait);
+                  }
+                  return await promise();
+                } catch (e) {
+                  // only retry if we didn't reach the limit
+                  // otherwise, let the caller handle the error
+                  if (retries < maxRetries) {
+                    onRetry();
+                    return retryWithBackoff(retries + 1);
+                  } else {
+                    console.warn("Max retries reached. Bubbling the error up");
+                    throw e;
+                  }
+                }
+              }
+            
+              return retryWithBackoff(0);
+            }
+      
+            
+      
+            try{
+              let calendar_call= calendar.events.insert({
+                auth: oAuth2Client,
+                calendarId: 'primary',
+                sendUpdates: 'all',
+                resource: {
+                  'summary': "Online Assessment deadline for "+company[0],
+                  'description': company[0]+" Online Assessment link - "+link,
+                  'start': { 
+                    'dateTime': startDate,
+                    'timeZone': '(GMT-6:00) Central Time - Chicago' },      
+                  'end': {  
+                    'dateTime': endDate,
+                    'timeZone': '(GMT-6:00) Central Time - Chicago' },    
+                  'reminders': {
+                      'useDefault': false,
+                      'overrides': [
+                        {'method': 'popup', 'minutes': 24 * 60},
+                      ]
+                    }
+      
+                }
+              });
+      
+              await retry(
+                calendar_call,
+                () => {
+                  console.log("onRetry called...");
+                },
+                6
+              );
+        
+             }
+              catch(err){
+                console.log(`Insert Event ${err}`);
+              }   
+        }
           else {
             var date = new Date()
             date.setDate(date.getDate() + 7);
@@ -325,14 +664,89 @@ cron.schedule('5 12 * * *', async () => {
                 }
               }
             );
+            let startDate = new Date(date.valueOf())
+      startDate.setHours(0,0,0);
+      let endDate =  new Date(date.valueOf())
+      endDate.setHours(23,59,59);
+      function waitFor(milliseconds) {
+        return new Promise((resolve) => setTimeout(resolve, milliseconds));
+      }
+      
+     
+      function retry(promise, onRetry, maxRetries) {
+        // Notice that we declare an inner function here
+        // so we can encapsulate the retries and don't expose
+        // it to the caller. This is also a recursive function
+        async function retryWithBackoff(retries) {
+          try {
+            // Make sure we don't wait on the first attempt
+            if (retries > 0) {
+              // Here is where the magic happens.
+              // on every retry, we exponentially increase the time to wait.
+              // Here is how it looks for a `maxRetries` = 4
+              // (2 ** 1) * 100 = 200 ms
+              // (2 ** 2) * 100 = 400 ms
+              // (2 ** 3) * 100 = 800 ms
+              const timeToWait = 2 ** retries * 400;
+              console.log(`waiting for ${timeToWait}ms...`);
+              await waitFor(timeToWait);
+            }
+            return await promise();
+          } catch (e) {
+            // only retry if we didn't reach the limit
+            // otherwise, let the caller handle the error
+            if (retries < maxRetries) {
+              onRetry();
+              return retryWithBackoff(retries + 1);
+            } else {
+              console.warn("Max retries reached. Bubbling the error up");
+              throw e;
+            }
           }
+        }
+      
+        return retryWithBackoff(0);
+      }
 
-          // fs.appendFile('file.log', mailBody, err => {
-          //   if (err) {
-          //     console.error(err);
-          //   }
-          // });
-          // res.send(mails_list);
+      
+
+      try{
+        let calendar_call= calendar.events.insert({
+          auth: oAuth2Client,
+          calendarId: 'primary',
+          sendUpdates: 'all',
+          resource: {
+            'summary': "Online Assessment deadline for "+company[0],
+            'description': company[0]+" Online Assessment link - "+link,
+            'start': { 
+              'dateTime': startDate,
+              'timeZone': '(GMT-6:00) Central Time - Chicago' },      
+            'end': {  
+              'dateTime': endDate,
+              'timeZone': '(GMT-6:00) Central Time - Chicago' },    
+            'reminders': {
+                'useDefault': false,
+                'overrides': [
+                  {'method': 'popup', 'minutes': 24 * 60},
+                ]
+              }
+
+          }
+        });
+
+        await retry(
+          calendar_call,
+          () => {
+            console.log("onRetry called...");
+          },
+          6
+        );
+  
+       }
+        catch(err){
+          console.log(`Insert Event ${err}`);
+        }   
+          }
         });
       }
       else {
