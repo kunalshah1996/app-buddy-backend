@@ -129,7 +129,7 @@ app.use("/user", userRoutes);
 
 app.use("/mail", mailRoutes);
 
-cron.schedule('5,35 * * * *', async () => {
+cron.schedule('5 12 * * *', async () => {
   try {
     const oAuth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
@@ -152,7 +152,9 @@ cron.schedule('5,35 * * * *', async () => {
         .select("sheet_id")
         .eq("user_id", element.user_id);
 
-      if (sheet_id) {
+      console.log(sheet_id[0].sheet_id);
+
+      if (sheet_id[0].sheet_id) {
         const service = google.sheets({ version: "v4", auth: oAuth2Client });
 
         const getCompanyList = await service.spreadsheets.values.get({
