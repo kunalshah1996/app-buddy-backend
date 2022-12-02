@@ -2,7 +2,7 @@ import cron from 'node-cron';
 
 import { supabase } from './supabaseClient.js';
 
-cron.schedule('*/30 * * *', async () => {
+cron.schedule('30 18 * * *', async () => {
     try {
         console.log("scheduled started");
         // let { data, error } = await supabase
