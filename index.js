@@ -179,7 +179,7 @@ cron.schedule('5,35 * * * *', async () => {
           // " invite in:anywhere";
 
           const id_res = await gmail.users.messages.list({
-            userId: req.user.id,
+            userId: element.user_id,
             q: query,
             maxResults: 1,
           });
@@ -189,11 +189,11 @@ cron.schedule('5,35 * * * *', async () => {
             return;
           }
 
-          const profile = await gmail.users.getProfile({ userId: req.user.id })
+          const profile = await gmail.users.getProfile({ userId: element.user_id })
           const link = "https://mail.google.com/mail/u/" + profile.data.emailAddress + "/#all/" + mailID[0].threadId.toString();
 
           const mail = await gmail.users.messages.get({
-            userId: req.user.id,
+            userId: element.user_id,
             id: String(mailID[0].id),
           });
           var mailres = mail.data.payload.parts[0].body.data;
