@@ -43,7 +43,7 @@ app.use(
     secret: "KunalSamruddhi",
     resave: false,
     saveUninitialized: false,
-    cookie: { sameSite: 'none', secure: true, domain: process.env.ORIGIN }    //uncomment for production
+    // cookie: { sameSite: 'none', secure: true, domain: 'https://appbuddy.tk' }    //uncomment for production
   })
 );
 app.use(passport.initialize());
